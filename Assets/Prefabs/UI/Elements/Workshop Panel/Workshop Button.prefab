@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.5000305, y: -0.22497559}
+  m_AnchoredPosition: {x: -0.5, y: -0.22497559}
   m_SizeDelta: {x: 0, y: -0.44999695}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8642119797503317139
@@ -149,8 +149,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4284962390
+  m_fontColor: {r: 0.3372549, g: 0.3372549, b: 0.4039216, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -167,7 +167,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 39.1
+  m_fontSize: 39.2
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -245,7 +245,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000030517578, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0.5}
   m_SizeDelta: {x: -1, y: 0.1000061}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2657999733633383432
@@ -297,6 +297,7 @@ GameObject:
   - component: {fileID: 549389278483876008}
   - component: {fileID: 3540095720898656892}
   - component: {fileID: 3636854013751347291}
+  - component: {fileID: 5272194002841851591}
   m_Layer: 5
   m_Name: Workshop Button
   m_TagString: Untagged
@@ -363,6 +364,23 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5272194002841851591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7413077035576958810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1322e04f9f374d446bd1a1a2635b0dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  idleObject: {fileID: 390743921287177119}
+  triggeredObject: {fileID: 6090185645369034631}
+  idleColor: {r: 0.3372549, g: 0.3372549, b: 0.40392157, a: 1}
+  triggeredColor: {r: 0.33333334, g: 0.33333334, b: 0.4039216, a: 1}
+  titleText: {fileID: 3779103422962029997}
 --- !u!1 &8342189049960271607
 GameObject:
   m_ObjectHideFlags: 0

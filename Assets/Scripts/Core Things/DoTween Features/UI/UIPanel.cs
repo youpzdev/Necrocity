@@ -22,8 +22,6 @@ public class UIPanel : MonoBehaviour
 
     private Vector2 _originalAnchoredPos;
 
-    private const string TweenId = "UIPanelTween";
-
     void Awake()
     {
         _originalAnchoredPos = _content.anchoredPosition;
@@ -31,7 +29,7 @@ public class UIPanel : MonoBehaviour
 
     public void Show()
     {
-        DOTween.Kill(TweenId);
+        DOTween.Kill(this);
 
         gameObject.SetActive(true);
 
@@ -73,7 +71,7 @@ public class UIPanel : MonoBehaviour
 
     public void Hide()
     {
-        DOTween.Kill(TweenId);
+        DOTween.Kill(this);
 
         switch (_animationType)
         {
@@ -111,70 +109,70 @@ public class UIPanel : MonoBehaviour
 
     void PlayFadeScaleShow()
     {
-        _canvasGroup.DOFade(1f, _duration).SetUpdate(true).SetId(TweenId);
+        _canvasGroup.DOFade(1f, _duration).SetUpdate(true).SetId(this);
         _content.localScale = Vector3.one * 0.8f;
-        _content.DOScale(1f, _duration).SetEase(Ease.OutBack).SetUpdate(true).SetId(TweenId);
+        _content.DOScale(1f, _duration).SetEase(Ease.OutBack).SetUpdate(true).SetId(this);
     }
 
     void PlayFadeScaleHide()
     {
-        _canvasGroup.DOFade(0f, _duration).SetUpdate(true).SetId(TweenId);
-        _content.DOScale(0.8f, _duration).SetEase(Ease.InBack).SetUpdate(true).SetId(TweenId)
+        _canvasGroup.DOFade(0f, _duration).SetUpdate(true).SetId(this);
+        _content.DOScale(0.8f, _duration).SetEase(Ease.InBack).SetUpdate(true).SetId(this)
             .OnComplete(() => gameObject.SetActive(false));
     }
 
     void PlaySlideShow(Vector2 offset)
     {
-        _canvasGroup.DOFade(1f, _duration).SetUpdate(true).SetId(TweenId);
+        _canvasGroup.DOFade(1f, _duration).SetUpdate(true).SetId(this);
 
         _content.anchoredPosition = _originalAnchoredPos + offset;
         _content.DOAnchorPos(_originalAnchoredPos, _duration)
             .SetEase(Ease.OutCubic)
             .SetUpdate(true)
-            .SetId(TweenId);
+            .SetId(this);
     }
 
     void PlaySlideHide(Vector2 offset)
     {
-        _canvasGroup.DOFade(0f, _duration).SetUpdate(true).SetId(TweenId);
+        _canvasGroup.DOFade(0f, _duration).SetUpdate(true).SetId(this);
 
         _content.DOAnchorPos(_originalAnchoredPos + offset, _duration)
             .SetEase(Ease.InCubic)
             .SetUpdate(true)
-            .SetId(TweenId)
+            .SetId(this)
             .OnComplete(() => gameObject.SetActive(false));
     }
 
     void PlayPopBounceShow()
     {
-        _canvasGroup.DOFade(1f, _duration * 0.7f).SetUpdate(true).SetId(TweenId);
+        _canvasGroup.DOFade(1f, _duration * 0.7f).SetUpdate(true).SetId(this);
 
         _content.localScale = Vector3.one * 0.5f;
         _content.DOScale(1f, _duration)
             .SetEase(Ease.OutElastic, 1f, 0.3f)
             .SetUpdate(true)
-            .SetId(TweenId);
+            .SetId(this);
     }
 
     void PlayPopBounceHide()
     {
-        _canvasGroup.DOFade(0f, _duration * 0.6f).SetUpdate(true).SetId(TweenId);
+        _canvasGroup.DOFade(0f, _duration * 0.6f).SetUpdate(true).SetId(this);
 
         _content.DOScale(0.5f, _duration * 0.6f)
             .SetEase(Ease.InBack)
             .SetUpdate(true)
-            .SetId(TweenId)
+            .SetId(this)
             .OnComplete(() => gameObject.SetActive(false));
     }
 
     void PlayFadeOnlyShow()
     {
-        _canvasGroup.DOFade(1f, _duration).SetUpdate(true).SetId(TweenId);
+        _canvasGroup.DOFade(1f, _duration).SetUpdate(true).SetId(this);
     }
 
     void PlayFadeOnlyHide()
     {
-        _canvasGroup.DOFade(0f, _duration).SetUpdate(true).SetId(TweenId)
+        _canvasGroup.DOFade(0f, _duration).SetUpdate(true).SetId(this)
             .OnComplete(() => gameObject.SetActive(false));
     }
 
