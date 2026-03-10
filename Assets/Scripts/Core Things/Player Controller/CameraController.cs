@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(150)]
 public class CameraController : MonoBehaviour
 {
     [Header("References")]
