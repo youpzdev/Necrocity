@@ -7,7 +7,6 @@ public class WorkshopPanel : MonoBehaviour
     [SerializeField] private UIPanel workshopPanel;
     [SerializeField] private UIPanel componentsPanel;
     [SerializeField] private UIPanel laboratoryPanel;
-
     [Space(5)]
     [SerializeField] private ButtonStyler workshopButton;
     [SerializeField] private ButtonStyler componentsButton;

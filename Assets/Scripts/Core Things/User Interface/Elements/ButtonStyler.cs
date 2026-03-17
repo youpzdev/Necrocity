@@ -12,13 +12,6 @@ public class ButtonStyler : MonoBehaviour
     [Space(5)]
     [SerializeField] private TMP_Text titleText;
 
-    private Button button;
-
-    private void Awake()
-    {
-        button = GetComponent<Button>();
-    }
-
     public void SwitchState(bool state)
     {
         idleObject.SetActive(!state);
