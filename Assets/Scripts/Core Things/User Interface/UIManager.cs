@@ -21,13 +21,18 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        ResourceManager.Instance.onResourcesChanged += UpdateResourcesText;
+        EventBus<ResourceManagerChangedEvent>.Subscribe(OnResourcesChanged, this);
     }
 
     void UpdateResourcesText()
     {
         dublonsText.text = $"{ResourceManager.Instance.GetResourceAmount(ResourceType.Dublons)}";
         loveText.text = $"{ResourceManager.Instance.GetResourceAmount(ResourceType.Love)}";
+    }
+
+    void OnResourcesChanged(ResourceManagerChangedEvent evt)
+    {
+        UpdateResourcesText();
     }
 
 

@@ -3,22 +3,17 @@ using UnityEngine;
 
 public class ResourceGainer : MonoBehaviour
 {
-    public Action onResourcesChanged;
-    public Action onLevelChanged;
-
     [SerializeField] private BuildingData buildingData;
 
     private int gainLimit;
     private int gainTime;
-    private float gainAmount = 0; // количество текущее
+    private float gainAmount = 0;
     private bool isProducing = true;
     private float produceTimer = 0;
     private int level = 1;
 
-    // ссылки
     public int GainLimit => gainLimit;
     public int GainAmount => Mathf.FloorToInt(gainAmount);
-
     public BuildingData Data => buildingData;
     public int Level => level;
 
@@ -35,14 +30,13 @@ public class ResourceGainer : MonoBehaviour
 
     void HandleProducing()
     {
-        if (isProducing)
+        if (!isProducing) return;
+
+        produceTimer += Time.deltaTime;
+        if (produceTimer >= 1f)
         {
-            produceTimer += Time.deltaTime;
-            if (produceTimer >= 1f)
-            {
-                produceTimer = 0;
-                AddProgress();
-            }
+            produceTimer = 0;
+            AddProgress();
         }
     }
 
@@ -51,14 +45,14 @@ public class ResourceGainer : MonoBehaviour
         produceTimer = 0f;
         gainAmount = 0;
         isProducing = true;
-        onResourcesChanged?.Invoke();
+        EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
     }
 
     void AddProgress()
     {
         float producePerSec = (float)gainLimit / gainTime;
         gainAmount += producePerSec;
-        onResourcesChanged?.Invoke();
+        EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
 
         if (gainAmount >= gainLimit)
         {
@@ -70,7 +64,7 @@ public class ResourceGainer : MonoBehaviour
     public void Redeem()
     {
         if (gainAmount <= 0) return;
-        
+
         ResourceManager.Instance.AddResource(buildingData.gainResources[level - 1].resourceType, Mathf.FloorToInt(gainAmount));
         Reset();
     }
@@ -84,15 +78,12 @@ public class ResourceGainer : MonoBehaviour
         level++;
         gainLimit = buildingData.gainResources[level - 1].gainLimit;
         gainTime = buildingData.gainResources[level - 1].gainTime;
-        onResourcesChanged?.Invoke();
-        onLevelChanged?.Invoke();
+        EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
+        EventBus<LevelChangedEvent>.Raise(new LevelChangedEvent { Gainer = this });
     }
 
     void OnMouseDown()
     {
-        UIManager.Instance.ShowBuildingInfo(this); // тут панель должна открыться с улучшениями
+        UIManager.Instance.ShowBuildingInfo(this);
     }
-
-    
-
 }

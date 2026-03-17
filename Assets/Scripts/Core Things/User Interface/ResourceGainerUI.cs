@@ -8,8 +8,8 @@ public class ResourceGainerUI : MonoBehaviour
     [SerializeField] private Image slider;
     [SerializeField] private TMP_Text sliderText;
     [SerializeField] private float tweenDuration = 0.5f;
-    
     [SerializeField] private Button gainButton;
+
     private ResourceGainer resourceGainer;
     private float currentFill;
 
@@ -21,14 +21,20 @@ public class ResourceGainerUI : MonoBehaviour
     void Start()
     {
         if (gainButton) gainButton.onClick.AddListener(resourceGainer.Redeem);
-        if (resourceGainer) resourceGainer.onResourcesChanged += UpdateUI;
+        EventBus<ResourcesChangedEvent>.Subscribe(OnResourcesChanged, this);
+        UpdateUI();
+    }
 
+    void OnResourcesChanged(ResourcesChangedEvent evt)
+    {
+        if (evt.Gainer != resourceGainer) return;
         UpdateUI();
     }
 
     void UpdateUI()
     {
-        if (!slider || !resourceGainer || !sliderText) { this.enabled = false; return;}
+        if (!slider || !resourceGainer || !sliderText) { enabled = false; return; }
+
         sliderText.text = $"{resourceGainer.GainAmount}/{resourceGainer.GainLimit}";
         float targetFill = Mathf.Clamp01((float)resourceGainer.GainAmount / resourceGainer.GainLimit);
 
@@ -39,6 +45,4 @@ public class ResourceGainerUI : MonoBehaviour
             currentFill = targetFill;
         }
     }
-
-
 }

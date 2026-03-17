@@ -5,7 +5,6 @@ using UnityEngine;
 public class ResourceManager : MonoBehaviour
 {
     public static ResourceManager Instance { get; private set; }
-    public Action onResourcesChanged; // делаем событие, чтоб не ковырять каждый раз этот скрипт, а то будет какашко
     [SerializeField] private List<ResourceSlot> resourceSlots = new List<ResourceSlot>();
     
 
@@ -39,7 +38,7 @@ public class ResourceManager : MonoBehaviour
             resourceSlots.Add(new ResourceSlot(resourceType, amount));
         }
 
-        onResourcesChanged?.Invoke();
+        EventBus<ResourceManagerChangedEvent>.Raise(new ResourceManagerChangedEvent());
     }
 
     public bool SpendResource(ResourceType resourceType, int amount)
@@ -47,7 +46,7 @@ public class ResourceManager : MonoBehaviour
         ResourceSlot slot = resourceSlots.Find(rs => rs.ResourceType == resourceType);
         if (slot != null && slot.TrySpend(amount))
         {
-            onResourcesChanged?.Invoke();
+            EventBus<ResourceManagerChangedEvent>.Raise(new ResourceManagerChangedEvent());
             return true;
         }
 

@@ -11,13 +11,22 @@ public class BuildingVisual : MonoBehaviour
 
     void Start()
     {
-        resourceGainer.onLevelChanged += UpdateVisual;
+        EventBus<LevelChangedEvent>.Subscribe(OnLevelChanged, this);
     }
 
     void UpdateVisual()
     {
-        foreach (var change in levelChanges) if (change.level == resourceGainer.Level) {foreach (var obj in change.buildingParts) {obj.SetActive(true); }};
-        // пока так через делаем
+        foreach (var change in levelChanges)
+        {
+            bool active = change.level == resourceGainer.Level;
+            foreach (var obj in change.buildingParts) obj.SetActive(active);
+        }
+    }
+
+    void OnLevelChanged(LevelChangedEvent evt)
+    {
+        if (evt.Gainer != resourceGainer) return;
+        UpdateVisual();
     }
 
 #if UNITY_EDITOR
