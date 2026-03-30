@@ -18,6 +18,16 @@ public class CraftingConfig : ScriptableObject
         foreach (var i in items) _itemCache[(int)i.type] = i;
     }
 
-    public ComponentData GetComponent(ComponentType type) => _componentCache[(int)type];
-    public ItemData GetItem(ItemType type) => _itemCache[(int)type];
+    public ComponentData GetComponentData(ComponentType type)
+    {
+        var index = (int)type;
+        if (index >= _componentCache.Length) return null;
+        return _componentCache[index];
+    }
+    
+    public ItemData GetItemData(ItemType type) => _itemCache[(int)type];
+
+    public ItemData[] GetAllItems() => items;
+    public ComponentData[] GetAllComponents() => components;
+    
 }

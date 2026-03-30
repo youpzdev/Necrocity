@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 1
   icon: {fileID: 21300000, guid: 7342f6a6656c7ae44ab536ac651f455e, type: 3}
+  description: "\u041A\u0430\u043C\u0435\u043D\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C\n"
+  craftDuration: 60

@@ -109,7 +109,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00039672852, y: -0.000089645386}
+  m_AnchoredPosition: {x: -0.00039672852, y: -0.000091552734}
   m_SizeDelta: {x: 0.8790016, y: 0.87400055}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8831827000319243471
@@ -222,6 +222,8 @@ GameObject:
   - component: {fileID: 4184776456368934052}
   - component: {fileID: 1663214928357724236}
   - component: {fileID: 7912897917312081737}
+  - component: {fileID: 588065927549833756}
+  - component: {fileID: 2651168593071217980}
   m_Layer: 5
   m_Name: Component Element
   m_TagString: Untagged
@@ -288,6 +290,66 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &588065927549833756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4685579599344267974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 7912897917312081737}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &2651168593071217980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4685579599344267974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56d524a7ceb526a45add3490864384b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  imageIcon: {fileID: 2489932332219080734}
+  titleText: {fileID: 0}
+  amountIcon: {fileID: 8524110874206011165}
+  amountText: {fileID: 4278051057626863799}
 --- !u!1 &8524110874206011165
 GameObject:
   m_ObjectHideFlags: 0
@@ -323,7 +385,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.74300003, y: 0}
   m_AnchorMax: {x: 1, y: 0.266}
-  m_AnchoredPosition: {x: 3, y: -2.0999985}
+  m_AnchoredPosition: {x: 3, y: -2.100006}
   m_SizeDelta: {x: 6.429699, y: 5.429699}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9101643013606895578

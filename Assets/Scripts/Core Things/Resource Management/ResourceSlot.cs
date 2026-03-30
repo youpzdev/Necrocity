@@ -16,11 +16,7 @@ public class ResourceSlot
         this.amount = amount;
     }
 
-    public void AddAmount(int amount_)
-    {
-        amount += amount_;
-    }
-
+    public void AddAmount(int amount_) => amount += amount_;
     public void SetAmount(int amount_) => amount = amount_;
 
     public bool TrySpend(int amount_)
@@ -28,6 +24,4 @@ public class ResourceSlot
         if (amount >= amount_) {amount -= amount_; return true;}
         return false;
     }
-
-    
 }
