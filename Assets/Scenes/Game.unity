@@ -7626,6 +7626,7 @@ MonoBehaviour:
   componentPrefab: {fileID: 4685579599344267974, guid: c43ff22d56f5def4c88812383f5ef2b2, type: 3}
   isChoosen: 0
   sellButton: {fileID: 1563248320}
+  sellButtonText: {fileID: 29729941}
   amountPanel: {fileID: 1517564457}
   amountText: {fileID: 988179529}
 --- !u!1 &1460604092

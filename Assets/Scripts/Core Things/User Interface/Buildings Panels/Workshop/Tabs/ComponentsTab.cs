@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class ComponentsTab : BaseComponentTab
 {
     [SerializeField] private Button sellButton;
+    [SerializeField] private TMP_Text sellButtonText;
     [SerializeField] private GameObject amountPanel;
     [SerializeField] private TMP_Text amountText;
 
@@ -41,6 +42,8 @@ public class ComponentsTab : BaseComponentTab
         int amount = InventoryManager.Instance.GetComponent(data.type);
         amountPanel.SetActive(amount > 1);
         amountText.text = amount.ToString();
+        string sellReward = data.SellPrice.ResourceType == ResourceType.Dublons ? "Дублонов" : "Любви";
+        sellButtonText.text = $"Продать за {data.SellPrice.Amount} {sellReward}";
     }
 
     protected override ComponentData[] GetComponentDatas()
