@@ -11,6 +11,7 @@ public abstract class BaseComponentTab : MonoBehaviour
     [SerializeField] protected GameObject componentPrefab;
 
     protected WorkshopPanel workshopPanel;
+    [SerializeField] protected bool isChoosen = false;
 
     protected virtual void Awake()
     {
@@ -45,5 +46,6 @@ public abstract class BaseComponentTab : MonoBehaviour
         titleText.text = data.name;
         if (descText != null) descText.text = data.description;
         iconImage.sprite = data.icon;
+        isChoosen = true;
     }
 }

@@ -7,4 +7,7 @@ public class ComponentData : ScriptableObject
     public Sprite icon;
     [TextArea(5,10)] public string description;
     public float craftDuration;
+
+    public ResourceSlot SellPrice;
+    
 }

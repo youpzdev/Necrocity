@@ -1,29 +1,19 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Автоматически адаптирует Cell Size у GridLayoutGroup под разрешение экрана.
-/// Прикрепи этот скрипт к тому же GameObject, что и GridLayoutGroup.
-/// </summary>
+[ExecuteAlways]
 [RequireComponent(typeof(GridLayoutGroup))]
 public class ResponsiveGridLayout : MonoBehaviour
 {
     [Header("Колонки и строки")]
-    [Tooltip("Количество колонок. 0 = авто по ширине")]
     [SerializeField] private int columns = 3;
-
-    [Tooltip("Количество строк. 0 = авто по высоте (используется только если columns = 0)")]
     [SerializeField] private int rows = 0;
 
     [Header("Соотношение сторон ячейки")]
-    [Tooltip("Соотношение ширины к высоте ячейки (например 1 = квадрат, 0.5 = вдвое выше)")]
     [SerializeField] private float cellAspectRatio = 1f;
 
-    [Header("Отступы (в % от ширины контейнера)")]
-    [Tooltip("Учитывать padding GridLayoutGroup при расчёте")]
+    [Header("Отступы")]
     [SerializeField] private bool respectPadding = true;
-
-    [Tooltip("Обновлять размер при каждом изменении размера экрана (через RectTransform)")]
     [SerializeField] private bool updateOnResize = true;
 
     private GridLayoutGroup _grid;
@@ -42,9 +32,9 @@ public class ResponsiveGridLayout : MonoBehaviour
         _lastSize = _rect.rect.size;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        if (!updateOnResize) return;
+        if (Application.isPlaying && !updateOnResize) return;
 
         Vector2 currentSize = _rect.rect.size;
         if (currentSize != _lastSize)
@@ -52,6 +42,9 @@ public class ResponsiveGridLayout : MonoBehaviour
             _lastSize = currentSize;
             UpdateCellSize();
         }
+
+        if (!Application.isPlaying)
+            UpdateCellSize();
     }
 
     [ContextMenu("Update Cell Size Now")]
@@ -75,16 +68,14 @@ public class ResponsiveGridLayout : MonoBehaviour
 
         if (columns > 0)
         {
-            // Считаем по количеству колонок
-            float spacingX = _grid.spacing.x * (columns - 1);
-            cellWidth = (usableWidth - spacingX) / columns;
+            float totalSpacingX = _grid.spacing.x * (columns - 1);
+            cellWidth = (usableWidth - totalSpacingX) / columns;
             cellHeight = cellWidth / cellAspectRatio;
         }
         else if (rows > 0)
         {
-            // Считаем по количеству строк
-            float spacingY = _grid.spacing.y * (rows - 1);
-            cellHeight = (usableHeight - spacingY) / rows;
+            float totalSpacingY = _grid.spacing.y * (rows - 1);
+            cellHeight = (usableHeight - totalSpacingY) / rows;
             cellWidth = cellHeight * cellAspectRatio;
         }
         else
@@ -93,15 +84,11 @@ public class ResponsiveGridLayout : MonoBehaviour
             return;
         }
 
-        cellWidth = Mathf.Max(cellWidth, 1f);
-        cellHeight = Mathf.Max(cellHeight, 1f);
-
-        _grid.cellSize = new Vector2(cellWidth, cellHeight);
+        _grid.cellSize = new Vector2(Mathf.Max(cellWidth, 1f), Mathf.Max(cellHeight, 1f));
     }
 
     private void OnValidate()
     {
-        // Обновление прямо в редакторе при изменении параметров
         if (_grid == null) _grid = GetComponent<GridLayoutGroup>();
         if (_rect == null) _rect = GetComponent<RectTransform>();
         if (_grid != null && _rect != null && _rect.rect.width > 0)
