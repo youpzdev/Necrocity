@@ -29,6 +29,8 @@ public class CraftingQueue : MonoBehaviour
     private DateTime _startTime;
     private bool _completedOffline;
 
+    private GameObject prefab;
+
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
@@ -39,17 +41,15 @@ public class CraftingQueue : MonoBehaviour
 
     private void Start()
     {
-        if (_completedOffline)
-            CompleteCraft();
+        if (_completedOffline) CompleteCraft();
     }
 
     private void Update()
     {
-        if (IsActive && IsCompleted)
-            CompleteCraft();
+        if (IsActive && IsCompleted) CompleteCraft();
     }
 
-    // ─── Public API ────────────────────────────────────────────────
+    // ─── Публичная нечисть ────────────────────────────────────────────────
 
     public bool TryStartCraft(ComponentData data)
     {
@@ -90,7 +90,19 @@ public class CraftingQueue : MonoBehaviour
         CurrentData = panel.GetComponentData(CurrentType);
     }
 
-    // ─── Internal ──────────────────────────────────────────────────
+    public void Redeem()
+    {
+        if (!IsReadyToCollect) return;
+        InventoryManager.Instance.AddComponent(CurrentType, 1);
+        IsReadyToCollect = false;
+        Save.Delete(KeyReady);
+        Save.Delete(KeyType);
+        CurrentType = default;
+        OnCraftCancelled?.Invoke();
+        EventBus<InventoryChangedEvent>.Raise(new InventoryChangedEvent());
+    }
+
+    // ─── Крафты ──────────────────────────────────────────────────
 
     private void CompleteCraft()
     {
@@ -106,18 +118,9 @@ public class CraftingQueue : MonoBehaviour
     }
 
 
-    public void Redeem()
-    {
-        if (!IsReadyToCollect) return;
-        InventoryManager.Instance.AddComponent(CurrentType, 1);
-        IsReadyToCollect = false;
-        Save.Delete(KeyReady);
-        Save.Delete(KeyType);
-        CurrentType = default;
-        OnCraftCancelled?.Invoke();
-    }
 
-    // ─── Persistence ───────────────────────────────────────────────
+
+    // ─── Стейты ───────────────────────────────────────────────
 
     private void SaveState()
     {

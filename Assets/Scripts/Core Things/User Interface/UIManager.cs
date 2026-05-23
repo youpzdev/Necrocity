@@ -14,6 +14,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text loveText;
     [Space(25)]
     [SerializeField] private GameObject[] uiPanels;
+    [Space(10)]
+    [SerializeField] private DormitoryPanel dormitoryPanel;
 
     void Awake()
     {
@@ -58,6 +60,12 @@ public class UIManager : MonoBehaviour
     {
         if (AreModalWindowOpened()) return;
         workshopPanel.Show();
+    }
+
+    public void ShowDormitoryPanel(Dormitory dormitory)
+    {
+        if (AreModalWindowOpened()) return;
+        dormitoryPanel.Show(dormitory);
     }
 
 

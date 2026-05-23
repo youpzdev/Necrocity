@@ -6,7 +6,7 @@ public class ResourceManager : MonoBehaviour
 {
     public static ResourceManager Instance { get; private set; }
     [SerializeField] private List<ResourceSlot> resourceSlots = new List<ResourceSlot>();
-    
+
 
     void Awake()
     {
@@ -64,3 +64,5 @@ public class ResourceManager : MonoBehaviour
 
 
 }
+
+public struct InventoryChangedEvent { }

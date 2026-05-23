@@ -22,12 +22,12 @@ public abstract class BaseComponentTab : MonoBehaviour
 
     protected virtual void UpdateUI()
     {
-        foreach (Transform old in componentGrid) Pooling.Destroy(old.gameObject);
+        for (int i = componentGrid.childCount - 1; i >= 0; i--)
+            Pooling.Destroy(componentGrid.GetChild(i).gameObject);
 
         foreach (var compData in GetComponentDatas())
         {
             int amount = GetAmount(compData);
-
             WorkshopComponent obj = Pooling.Instantiate(componentPrefab, componentGrid)
                                            .GetComponent<WorkshopComponent>();
             obj.Init(
@@ -38,6 +38,7 @@ public abstract class BaseComponentTab : MonoBehaviour
             );
         }
     }
+
     protected abstract ComponentData[] GetComponentDatas();
     protected abstract int GetAmount(ComponentData data);
 
@@ -47,5 +48,21 @@ public abstract class BaseComponentTab : MonoBehaviour
         if (descText != null) descText.text = data.description;
         iconImage.sprite = data.icon;
         isChoosen = true;
+    }
+
+    protected virtual void OnEnable()
+    {
+        EventBus<InventoryChangedEvent>.Subscribe(OnInventoryChanged, this);
+    }
+
+    protected virtual void OnDisable()
+    {
+        EventBus<InventoryChangedEvent>.Unsubscribe(OnInventoryChanged);
+    }
+
+    private void OnInventoryChanged(InventoryChangedEvent _)
+    {
+        Debug.Log($"[{name}] OnInventoryChanged fired");
+        UpdateUI();
     }
 }

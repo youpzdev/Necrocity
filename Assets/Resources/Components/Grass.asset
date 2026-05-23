@@ -15,4 +15,7 @@ MonoBehaviour:
   type: 2
   icon: {fileID: 21300000, guid: 8037fd37f2f37cd408456920298cfa34, type: 3}
   description: "\u0442\u0440\u0430\u0432\u0430"
-  craftDuration: 60
+  craftDuration: 5
+  SellPrice:
+    resourceType: 0
+    amount: 0

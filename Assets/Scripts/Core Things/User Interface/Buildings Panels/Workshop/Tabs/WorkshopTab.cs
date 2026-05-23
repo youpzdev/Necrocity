@@ -89,8 +89,7 @@ public class WorkshopTab : MonoBehaviour
 
         InventoryManager.Instance.AddItem(_selected.type, 1);
 
-        UpdateUI();
-        RefreshCraftButton();
+        EventBus<InventoryChangedEvent>.Raise(new InventoryChangedEvent());
     }
 
     private bool CanCraft(ItemData data)
@@ -99,5 +98,21 @@ public class WorkshopTab : MonoBehaviour
             if (!InventoryManager.Instance.CanSpendComponent(ingredient.component, ingredient.amount))
                 return false;
         return true;
+    }
+
+    private void OnEnable()
+    {
+        EventBus<InventoryChangedEvent>.Subscribe(OnInventoryChanged, this);
+    }
+
+    private void OnDisable()
+    {
+        EventBus<InventoryChangedEvent>.Unsubscribe(OnInventoryChanged);
+    }
+
+    private void OnInventoryChanged(InventoryChangedEvent _)
+    {
+        UpdateUI();
+        RefreshCraftButton();
     }
 }

@@ -22,16 +22,17 @@ public class ComponentsTab : BaseComponentTab
         if (selectedComponent == null) return;
 
         bool sold = InventoryManager.Instance.TrySpendComponent(selectedComponent.type, 1);
-        if (sold)
-        {
-            Debug.Log($"Sold: {selectedComponent.name}");
-            ResourceManager.Instance.AddResource(selectedComponent.SellPrice.ResourceType, selectedComponent.SellPrice.Amount);
-            UpdateUI();
+        if (!sold) return;
 
-            int remaining = InventoryManager.Instance.GetComponent(selectedComponent.type);
-            amountPanel.SetActive(remaining > 1);
-            amountText.text = remaining.ToString();
-        }
+        ResourceManager.Instance.AddResource(selectedComponent.SellPrice.ResourceType, selectedComponent.SellPrice.Amount);
+
+        int remaining = InventoryManager.Instance.GetComponent(selectedComponent.type);
+        if (remaining == 0) selectedComponent = null;
+
+        amountPanel.SetActive(remaining > 1);
+        amountText.text = remaining.ToString();
+
+        EventBus<InventoryChangedEvent>.Raise(new InventoryChangedEvent());
     }
 
     protected override void OnComponentClick(ComponentData data)
