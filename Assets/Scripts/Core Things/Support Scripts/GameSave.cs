@@ -22,8 +22,11 @@ public static class GameSave
         public const string CraftActive = "craft.active";
         public const string CraftReady = "craft.ready";
         public const string CraftLastSeen = "craft.lastSeen";
+        public const string PlacedObjects = "placed.objects";
 
         public static string Gainer(string id) => "gainer." + id;
+
+        public static string TutorialStep(string id) => "tutorial.step." + id;
     }
 
     [Serializable]
