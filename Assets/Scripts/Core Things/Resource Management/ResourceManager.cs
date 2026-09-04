@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,12 +13,22 @@ public class ResourceManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
+            return;
         }
-        else
-        {
-            Instance = this;
-        }
+
+        Instance = this;
+        Load();
+    }
+
+    void Start()
+    {
+        StartCoroutine(RaiseChangedNextFrame());
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     public int GetResourceAmount(ResourceType resourceType)
@@ -28,41 +39,58 @@ public class ResourceManager : MonoBehaviour
 
     public void AddResource(ResourceType resourceType, int amount)
     {
-        ResourceSlot slot = resourceSlots.Find(rs => rs.ResourceType == resourceType);
-        if (slot != null)
-        {
-            slot.AddAmount(amount);
-        }
-        else
-        {
-            resourceSlots.Add(new ResourceSlot(resourceType, amount));
-        }
-
+        GetOrCreateSlot(resourceType).AddAmount(amount);
+        SaveResources();
         EventBus<ResourceManagerChangedEvent>.Raise(new ResourceManagerChangedEvent());
     }
 
     public bool SpendResource(ResourceType resourceType, int amount)
     {
-        ResourceSlot slot = resourceSlots.Find(rs => rs.ResourceType == resourceType);
-        if (slot != null && slot.TrySpend(amount))
-        {
-            EventBus<ResourceManagerChangedEvent>.Raise(new ResourceManagerChangedEvent());
-            return true;
-        }
+        if (!GetOrCreateSlot(resourceType).TrySpend(amount)) return false;
 
-        return false;
+        SaveResources();
+        EventBus<ResourceManagerChangedEvent>.Raise(new ResourceManagerChangedEvent());
+        return true;
     }
 
-    public bool CanSpendResource(ResourceType resourceType, int amount)
+    public bool CanSpendResource(ResourceType resourceType, int amount) =>
+        GetResourceAmount(resourceType) >= amount;
+
+    ResourceSlot GetOrCreateSlot(ResourceType resourceType)
     {
         ResourceSlot slot = resourceSlots.Find(rs => rs.ResourceType == resourceType);
+        if (slot == null)
+        {
+            slot = new ResourceSlot(resourceType, 0);
+            resourceSlots.Add(slot);
+        }
 
-        if (slot != null && slot.Amount >= amount) return true;
-        return false;
+        return slot;
     }
 
+    void SaveResources()
+    {
+        var stored = new Dictionary<string, int>();
+        foreach (var slot in resourceSlots) stored[slot.ResourceType.ToString()] = slot.Amount;
+        GameSave.Set(GameSave.Keys.Resources, stored);
+    }
 
+    void Load()
+    {
+        var stored = GameSave.Get<Dictionary<string, int>>(GameSave.Keys.Resources, null);
+        if (stored == null) return;
 
+        foreach (var pair in stored)
+        {
+            if (!Enum.TryParse(pair.Key, out ResourceType type)) continue;
+            if (!Enum.IsDefined(typeof(ResourceType), type)) continue;
+            GetOrCreateSlot(type).SetAmount(pair.Value);
+        }
+    }
+
+    IEnumerator RaiseChangedNextFrame()
+    {
+        yield return null;
+        EventBus<ResourceManagerChangedEvent>.Raise(new ResourceManagerChangedEvent());
+    }
 }
-
-public struct InventoryChangedEvent { }

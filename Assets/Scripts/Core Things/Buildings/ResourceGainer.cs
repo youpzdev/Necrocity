@@ -1,16 +1,21 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class ResourceGainer : MonoBehaviour, IClickableBuilding
 {
     [SerializeField] private BuildingData buildingData;
+    [SerializeField] private string saveId;
+    [SerializeField] private float maxOfflineHours = 8f;
 
     private int gainLimit;
     private int gainTime;
     private float gainAmount = 0;
     private bool isProducing = true;
-    private float produceTimer = 0;
+    private float nextTickTime = 0;
+    private long lastTickUtc;
     private int level = 1;
+    private string saveKey;
 
     public int GainLimit => gainLimit;
     public int GainAmount => Mathf.FloorToInt(gainAmount);
@@ -19,46 +24,32 @@ public class ResourceGainer : MonoBehaviour, IClickableBuilding
 
     void Awake()
     {
-        gainLimit = buildingData.gainResources[level - 1].gainLimit;
-        gainTime = buildingData.gainResources[level - 1].gainTime;
+        saveKey = GameSave.Keys.Gainer(string.IsNullOrEmpty(saveId) ? HierarchyPath() : saveId);
+        lastTickUtc = GameSave.NowUtc();
+        ApplyLevel();
+        Load();
+    }
+
+    void OnEnable()
+    {
+        nextTickTime = Time.time + 1f;
+    }
+
+    void Start()
+    {
+        StartCoroutine(RaiseStateNextFrame());
     }
 
     void Update()
     {
-        HandleProducing();
-    }
-
-    void HandleProducing()
-    {
         if (!isProducing) return;
+        if (Time.time < nextTickTime) return;
 
-        produceTimer += Time.deltaTime;
-        if (produceTimer >= 1f)
-        {
-            produceTimer = 0;
-            AddProgress();
-        }
-    }
+        nextTickTime = Time.time + 1f;
 
-    void Reset()
-    {
-        produceTimer = 0f;
-        gainAmount = 0;
-        isProducing = true;
+        ApplyElapsedProgress();
+        SaveState();
         EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
-    }
-
-    void AddProgress()
-    {
-        float producePerSec = (float)gainLimit / gainTime;
-        gainAmount += producePerSec;
-        EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
-
-        if (gainAmount >= gainLimit)
-        {
-            gainAmount = gainLimit;
-            isProducing = false;
-        }
     }
 
     public void Redeem()
@@ -66,7 +57,7 @@ public class ResourceGainer : MonoBehaviour, IClickableBuilding
         if (gainAmount <= 0) return;
 
         ResourceManager.Instance.AddResource(buildingData.gainResources[level - 1].resourceType, Mathf.FloorToInt(gainAmount));
-        Reset();
+        ResetProduction();
     }
 
     public void AddLevel()
@@ -76,8 +67,8 @@ public class ResourceGainer : MonoBehaviour, IClickableBuilding
         if (buildingData.gainResources[level - 1].resourceType != buildingData.gainResources[level].resourceType) Redeem();
 
         level++;
-        gainLimit = buildingData.gainResources[level - 1].gainLimit;
-        gainTime = buildingData.gainResources[level - 1].gainTime;
+        ApplyLevel();
+        SaveState();
         EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
         EventBus<LevelChangedEvent>.Raise(new LevelChangedEvent { Gainer = this });
     }
@@ -87,4 +78,89 @@ public class ResourceGainer : MonoBehaviour, IClickableBuilding
         UIManager.Instance.ShowGainerPanel(this);
     }
 
+    float ProducePerSecond => (float)gainLimit / gainTime;
+
+    void ResetProduction()
+    {
+        nextTickTime = Time.time + 1f;
+        lastTickUtc = GameSave.NowUtc();
+        gainAmount = 0;
+        isProducing = true;
+        SaveState();
+        EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
+    }
+
+    void ApplyElapsedProgress()
+    {
+        double limit = Math.Max(0f, maxOfflineHours) * 3600d;
+        double seconds = Math.Min(GameSave.SecondsSince(lastTickUtc), limit);
+        if (seconds <= 0) return;
+
+        lastTickUtc = GameSave.NowUtc();
+        gainAmount += (float)(seconds * ProducePerSecond);
+
+        if (gainAmount >= gainLimit)
+        {
+            gainAmount = gainLimit;
+            isProducing = false;
+        }
+    }
+
+    void ApplyLevel()
+    {
+        int index = Mathf.Clamp(level - 1, 0, buildingData.gainResources.Length - 1);
+        gainLimit = buildingData.gainResources[index].gainLimit;
+        gainTime = Mathf.Max(1, buildingData.gainResources[index].gainTime);
+    }
+
+    void Load()
+    {
+        var state = GameSave.Get<GameSave.GainerState>(saveKey, null);
+        if (state == null)
+        {
+            SaveState();
+            return;
+        }
+
+        level = Mathf.Clamp(state.Level, 1, buildingData.gainResources.Length);
+        ApplyLevel();
+
+        gainAmount = Mathf.Clamp(state.Progress, 0f, gainLimit);
+        isProducing = state.Producing && gainAmount < gainLimit;
+        if (state.SavedAtUtc > 0) lastTickUtc = state.SavedAtUtc;
+
+        if (isProducing) ApplyElapsedProgress();
+        SaveState();
+    }
+
+    void SaveState()
+    {
+        GameSave.Set(saveKey, new GameSave.GainerState
+        {
+            Level = level,
+            Progress = gainAmount,
+            Producing = isProducing,
+            SavedAtUtc = lastTickUtc
+        });
+    }
+
+    string HierarchyPath()
+    {
+        string path = name;
+        Transform parent = transform.parent;
+        while (parent != null)
+        {
+            path = parent.name + "/" + path;
+            parent = parent.parent;
+        }
+
+        return path;
+    }
+
+    IEnumerator RaiseStateNextFrame()
+    {
+        yield return null;
+        EventBus<ResourcesChangedEvent>.Raise(new ResourcesChangedEvent { Gainer = this });
+        EventBus<LevelChangedEvent>.Raise(new LevelChangedEvent { Gainer = this });
+    }
 }

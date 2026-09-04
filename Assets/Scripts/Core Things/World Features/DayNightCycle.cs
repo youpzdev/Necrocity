@@ -17,7 +17,11 @@ public class DayNightCycle : MonoBehaviour
     [Header("Интенсивность света как бы")]
     public float maxIntensity = 1.5f;
 
+    private const float SaveInterval = 1f;
+
     private Light _sun;
+
+    private float _nextSaveTime;
 
     private void Awake()
     {
@@ -27,6 +31,18 @@ public class DayNightCycle : MonoBehaviour
         {
             lightColor = CreateDefaultGradient();
         }
+
+        timeOfDay = Mathf.Repeat(GameSave.Get(GameSave.Keys.TimeOfDay, timeOfDay), 1f);
+    }
+
+    private void OnEnable()
+    {
+        _nextSaveTime = Time.time + SaveInterval;
+    }
+
+    private void OnDisable()
+    {
+        SaveTime();
     }
 
     private void Update()
@@ -35,7 +51,15 @@ public class DayNightCycle : MonoBehaviour
         if (timeOfDay >= 1f) timeOfDay -= 1f;
 
         UpdateSun();
+
+        if (Time.time >= _nextSaveTime)
+        {
+            _nextSaveTime = Time.time + SaveInterval;
+            SaveTime();
+        }
     }
+
+    private void SaveTime() => GameSave.Set(GameSave.Keys.TimeOfDay, timeOfDay);
 
     private void UpdateSun()
     {
