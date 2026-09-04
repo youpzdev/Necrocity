@@ -14,6 +14,9 @@ public class WorkshopTab : MonoBehaviour
     [SerializeField] private TMP_Text craftButtonText;
     [SerializeField] private ModelPreview modelPreview;
 
+    [Header("Placement")]
+    [SerializeField] private UIPanel rootPanel;
+
     [Header("Labels")]
     [SerializeField] private string craftLabel = "Скрафтить";
     [SerializeField] private string notEnoughLabel = "Не хватает ресурсов";
@@ -139,9 +142,20 @@ public class WorkshopTab : MonoBehaviour
         foreach (var ingredient in _selected.recipe)
             InventoryManager.Instance.TrySpendComponent(ingredient.component, ingredient.amount);
 
-        InventoryManager.Instance.AddItem(_selected.type, 1);
+        ItemType crafted = _selected.type;
+        InventoryManager.Instance.AddItem(crafted, 1);
 
         EventBus<InventoryChangedEvent>.Raise(new InventoryChangedEvent());
+
+        StartPlacement(crafted);
+    }
+
+    private void StartPlacement(ItemType type)
+    {
+        if (PlacementManager.Instance == null) return;
+
+        if (rootPanel != null) rootPanel.Hide();
+        PlacementManager.Instance.BeginPlacement(type);
     }
 
     private bool CanCraft(ItemData data)
