@@ -2395,6 +2395,8 @@ MonoBehaviour:
   craftButtonText: {fileID: 176213754}
   craftLabel: "\u0421\u043A\u0440\u0430\u0444\u0442\u0438\u0442\u044C"
   notEnoughLabel: "\u041D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u0440\u0435\u0441\u0443\u0440\u0441\u043E\u0432"
+  emptyTitle: "\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u043E"
+  emptyCraftLabel: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0440\u0435\u0434\u043C\u0435\u0442"
 --- !u!1 &287344230
 GameObject:
   m_ObjectHideFlags: 0
@@ -2978,22 +2980,30 @@ MonoBehaviour:
   useYawLimits: 1
   minYaw: -35
   maxYaw: 35
-  minVerticalOffset: 0
-  maxVerticalOffset: 3
-  rotateSensitivity: 0.035
-  panSensitivity: 0.0005
-  scrollSensitivity: 20
-  pinchSensitivity: 0.15
+  mousePanSensitivity: 1
+  mouseRotateSensitivity: 0.2
+  mouseZoomStep: 3
+  touchPanSensitivity: 1
+  useTouchRotation: 1
+  touchRotateSensitivity: 1
+  touchZoomSensitivity: 70
+  panStartThresholdPixels: 6
+  pinchStartThresholdPixels: 12
+  twistStartThresholdDegrees: 4
+  ignoreInputOverUI: 1
   fovSmooth: 10
   positionSmooth: 0.1
+  usePanInertia: 1
+  panInertiaDamping: 6
+  panInertiaStopSpeed: 0.05
   focusMoveDuration: 0.6
   focusReturnDuration: 0.6
   focusDistance: 0
   focusHeightOffset: 0
   focusEase: 4
   useManualLimits: 1
-  xLimits: {x: -10, y: 10}
-  yLimits: {x: -5, y: 15}
+  xLimits: {x: -13.662802, y: 12.115034}
+  zLimits: {x: 0.9624109, y: 25.781624}
 --- !u!1 &333801822
 GameObject:
   m_ObjectHideFlags: 0
@@ -5389,6 +5399,9 @@ MonoBehaviour:
   commonColor: {r: 0.36, g: 0.68, b: 1, a: 1}
   rareColor: {r: 0.65, g: 0.4, b: 1, a: 1}
   epicColor: {r: 1, g: 0.82, b: 0.25, a: 1}
+  emptyTitle: "\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u043E"
+  emptyDescription: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442
+    \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u0441\u043B\u0435\u0432\u0430"
   isChoosen: 0
   craftButton: {fileID: 1934391184}
   progressText: {fileID: 234605760}
@@ -9657,6 +9670,9 @@ MonoBehaviour:
   commonColor: {r: 0.36, g: 0.68, b: 1, a: 1}
   rareColor: {r: 0.65, g: 0.4, b: 1, a: 1}
   epicColor: {r: 1, g: 0.82, b: 0.25, a: 1}
+  emptyTitle: "\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u043E"
+  emptyDescription: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442
+    \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u0441\u043B\u0435\u0432\u0430"
   isChoosen: 0
   sellButton: {fileID: 1563248320}
   sellButtonText: {fileID: 29729941}
@@ -9666,8 +9682,6 @@ MonoBehaviour:
   loveLabel: "\u041B\u044E\u0431\u0432\u0438"
   sellFormat: "\u041F\u0440\u043E\u0434\u0430\u0442\u044C \u0437\u0430 {0} {1}"
   emptySellLabel: "\u041F\u0440\u043E\u0434\u0430\u0442\u044C"
-  emptyTitle: 
-  emptyDescription: 
 --- !u!1 &1460604092
 GameObject:
   m_ObjectHideFlags: 0
