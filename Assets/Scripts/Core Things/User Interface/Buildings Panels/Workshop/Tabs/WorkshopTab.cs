@@ -12,6 +12,7 @@ public class WorkshopTab : MonoBehaviour
     [SerializeField] private GameObject recipePrefab;
     [SerializeField] private Button craftButton;
     [SerializeField] private TMP_Text craftButtonText;
+    [SerializeField] private ModelPreview modelPreview;
 
     [Header("Labels")]
     [SerializeField] private string craftLabel = "Скрафтить";
@@ -56,6 +57,7 @@ public class WorkshopTab : MonoBehaviour
 
         titleText.text = data.name;
         ApplyIcon(data.icon);
+        if (modelPreview != null) modelPreview.Show(data.prefab3D);
 
         BuildRecipe();
         RefreshCraftButton();
@@ -67,6 +69,7 @@ public class WorkshopTab : MonoBehaviour
 
         if (titleText != null) titleText.text = emptyTitle;
         ApplyIcon(null);
+        if (modelPreview != null) modelPreview.Clear();
 
         BuildRecipe();
         RefreshCraftButton();

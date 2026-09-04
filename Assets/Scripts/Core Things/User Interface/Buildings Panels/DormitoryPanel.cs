@@ -20,8 +20,7 @@ public class DormitoryPanel : MonoBehaviour
     [SerializeField] private GameObject residentsEmptyState;
 
     [Header("Preview")]
-    [SerializeField] private Transform previewRoot;
-    [SerializeField] private GameObject previewPlaceholder;
+    [SerializeField] private ModelPreview modelPreview;
     [SerializeField] private TMP_Text previewNameText;
 
     [Header("Upgrade Tab")]
@@ -41,7 +40,6 @@ public class DormitoryPanel : MonoBehaviour
     [SerializeField] private string notEnoughDublonsMessage = "Не хватает дублонов";
 
     private Dormitory _dormitory;
-    private GameObject _previewInstance;
     private int _selectedIndex = -1;
     private Coroutine _messageRoutine;
 
@@ -173,38 +171,23 @@ public class DormitoryPanel : MonoBehaviour
 
     private void ShowPreview(int index)
     {
-        ClearPreview();
-
         CharacterData data = _dormitory != null ? _dormitory.GetCharacterData(index) : null;
-        if (data == null) return;
+        if (data == null)
+        {
+            ClearPreview();
+            return;
+        }
 
         _selectedIndex = index;
 
         if (previewNameText != null) previewNameText.text = data.characterName;
-
-        bool hasModel = previewRoot != null && data.prefab3D != null;
-        if (hasModel)
-        {
-            _previewInstance = Instantiate(data.prefab3D, previewRoot);
-            _previewInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-
-            var brain = _previewInstance.GetComponentInChildren<NPCBrain>(true);
-            if (brain != null) brain.enabled = false;
-        }
-
-        if (previewPlaceholder != null) previewPlaceholder.SetActive(!hasModel);
+        if (modelPreview != null) modelPreview.Show(data.prefab3D);
     }
 
     private void ClearPreview()
     {
-        if (_previewInstance != null)
-        {
-            Destroy(_previewInstance);
-            _previewInstance = null;
-        }
-
         if (previewNameText != null) previewNameText.text = "";
-        if (previewPlaceholder != null) previewPlaceholder.SetActive(true);
+        if (modelPreview != null) modelPreview.Clear();
     }
 
     private void RefreshUpgradeTab()
