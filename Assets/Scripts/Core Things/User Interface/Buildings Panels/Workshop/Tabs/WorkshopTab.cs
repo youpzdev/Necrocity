@@ -77,6 +77,12 @@ public class WorkshopTab : MonoBehaviour
 
     private void ApplyIcon(Sprite icon)
     {
+        if (modelPreview != null)
+        {
+            if (iconImage) iconImage.enabled = false;
+            return;
+        }
+
         if (iconImage == null) return;
 
         iconImage.sprite = icon;

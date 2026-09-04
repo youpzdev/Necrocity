@@ -61,7 +61,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.62, g: 0.66, b: 0.78, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -92,9 +92,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   imageIcon: {fileID: 6805124433893352555}
   titleText: {fileID: 0}
+  descText: {fileID: 0}
   amountIcon: {fileID: 0}
   amountText: {fileID: 0}
+  rarityFrame: {fileID: 0}
   button: {fileID: 6270569332553764103}
+  canvasGroup: {fileID: 0}
+  availableAlpha: 1
+  unavailableAlpha: 0.4
+  availableTint: {r: 1, g: 1, b: 1, a: 1}
+  unavailableTint: {r: 0.55, g: 0.55, b: 0.6, a: 1}
+  requiredAmountFormat: '{0}/{1}'
+  enoughAmountColor: {r: 1, g: 1, b: 1, a: 1}
+  missingAmountColor: {r: 0.9, g: 0.25, b: 0.25, a: 1}
 --- !u!114 &6270569332553764103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -173,8 +183,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000015258789, y: 0.000015258789}
-  m_SizeDelta: {x: -31.1017, y: -85.1017}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -12, y: -12}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7849054510345772194
 CanvasRenderer:

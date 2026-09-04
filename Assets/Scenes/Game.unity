@@ -2140,7 +2140,7 @@ MonoBehaviour:
   emptyState: {fileID: 0}
   frameSize: 1
   modelOffset: {x: 0, y: 0, z: 0}
-  startAngle: 20
+  startAngle: 200
   rotate: 0
   rotationSpeed: 30
   useUnscaledTime: 1
@@ -8081,7 +8081,7 @@ Transform:
   m_GameObject: {fileID: 1069098104}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.4117107, y: 4.460819, z: 8.350384}
+  m_LocalPosition: {x: -4.198543, y: 5.290819, z: 14.046968}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10661,7 +10661,7 @@ MonoBehaviour:
   emptyState: {fileID: 0}
   frameSize: 1
   modelOffset: {x: 0, y: 0, z: 0}
-  startAngle: 25
+  startAngle: 205
   rotate: 1
   rotationSpeed: 30
   useUnscaledTime: 1
