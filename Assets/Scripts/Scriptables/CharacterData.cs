@@ -15,6 +15,7 @@ public class CharacterData : ScriptableObject
     public string characterName;
     public Sprite icon;
     public GameObject prefab3D;
+    public float previewRotation;
     public ColorVariant[] colorVariants;
 
     public int VariantCount => colorVariants != null ? colorVariants.Length : 0;

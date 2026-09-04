@@ -46,7 +46,9 @@ public class ModelPreview : MonoBehaviour
         modelHolder.Rotate(0f, rotationSpeed * delta, 0f, Space.Self);
     }
 
-    public void Show(GameObject prefab)
+    public void Show(GameObject prefab) => Show(prefab, 0f);
+
+    public void Show(GameObject prefab, float angleOffset)
     {
         if (prefab == null)
         {
@@ -68,7 +70,7 @@ public class ModelPreview : MonoBehaviour
         _prefab = prefab;
         _instance = Spawn(prefab);
 
-        modelHolder.localRotation = Quaternion.Euler(0f, startAngle, 0f);
+        modelHolder.localRotation = Quaternion.Euler(0f, startAngle + angleOffset, 0f);
         Fit(_instance.transform);
 
         if (previewCamera != null) previewCamera.enabled = true;
@@ -97,6 +99,10 @@ public class ModelPreview : MonoBehaviour
         Prepare(instance);
 
         modelHolder.gameObject.SetActive(holderWasActive);
+
+        foreach (SkinnedMeshRenderer skinned in instance.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            skinned.updateWhenOffscreen = true;
+
         return instance;
     }
 
@@ -153,10 +159,9 @@ public class ModelPreview : MonoBehaviour
         {
             if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)) continue;
 
-            Bounds local = renderer.localBounds;
-            Matrix4x4 matrix = toModel * renderer.transform.localToWorldMatrix;
-            Vector3 center = local.center;
-            Vector3 extents = local.extents;
+            Bounds world = renderer.bounds;
+            Vector3 center = world.center;
+            Vector3 extents = world.extents;
 
             for (int i = 0; i < 8; i++)
             {
@@ -165,17 +170,14 @@ public class ModelPreview : MonoBehaviour
                     (i & 2) == 0 ? -extents.y : extents.y,
                     (i & 4) == 0 ? -extents.z : extents.z);
 
-                Vector3 point = matrix.MultiplyPoint3x4(corner);
+                Vector3 point = toModel.MultiplyPoint3x4(corner);
 
-                if (found)
-                {
-                    bounds.Encapsulate(point);
-                }
-                else
+                if (!found)
                 {
                     bounds = new Bounds(point, Vector3.zero);
                     found = true;
                 }
+                else bounds.Encapsulate(point);
             }
         }
 

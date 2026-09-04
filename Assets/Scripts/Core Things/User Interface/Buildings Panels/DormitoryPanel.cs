@@ -198,7 +198,7 @@ public class DormitoryPanel : MonoBehaviour
         }
 
         if (selectedNameText != null) selectedNameText.text = data.characterName;
-        if (modelPreview != null) modelPreview.Show(data.prefab3D);
+        if (modelPreview != null) modelPreview.Show(data.prefab3D, data.previewRotation);
 
         int price = _dormitory.NextCharacterPrice;
         if (selectedPriceText != null) selectedPriceText.text = string.Format(priceFormat, price);
