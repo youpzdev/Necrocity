@@ -14,5 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterName: Zombie
   icon: {fileID: 21300000, guid: e617061350fd1b346864dd73da1a4b64, type: 3}
-  prefab3D: {fileID: 0}
-  price: 10
+  prefab3D: {fileID: 8136269692711646123, guid: 76872fb3344f9bd418fc5090cdfb68e2, type: 3}
+  colorVariants:
+  - variantName: Pale
+    tint: {r: 0.82, g: 0.86, b: 0.78, a: 1}
+    material: {fileID: 0}
+  - variantName: Rot
+    tint: {r: 0.45, g: 0.62, b: 0.36, a: 1}
+    material: {fileID: 0}
+  - variantName: Bruise
+    tint: {r: 0.55, g: 0.44, b: 0.7, a: 1}
+    material: {fileID: 0}

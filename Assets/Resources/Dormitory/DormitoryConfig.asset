@@ -17,4 +17,7 @@ MonoBehaviour:
   baseLevelPrice: 5000
   levelPriceStep: 5000
   maxLevel: 60
-  characters: []
+  characters:
+  - {fileID: 11400000, guid: e5ccbfe2e9c45324eba8da217cfd2e8d, type: 2}
+  baseCharacterPrice: 10000
+  characterPriceStep: 10000
