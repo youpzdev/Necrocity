@@ -824,7 +824,7 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 2.3937664
-  m_Radius: 0.6067983
+  m_Radius: 0.2685067
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
@@ -851,7 +851,13 @@ MonoBehaviour:
   waitTimeMin: 1
   waitTimeMax: 4
   chanceToWanderLocally: 0.6
+  animator: {fileID: 0}
+  movingParameter: Moving
   groundCheckDistance: 1.5
+  groundProbeHeight: 0.5
+  edgeProbeDistance: 0.5
+  fallRecoveryDepth: 5
+  spawnGroundSearchDepth: 50
   groundMask:
     serializedVersion: 2
     m_Bits: 0

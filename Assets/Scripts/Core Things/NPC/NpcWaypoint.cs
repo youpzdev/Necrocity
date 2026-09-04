@@ -7,7 +7,21 @@ public class NPCWaypoint : MonoBehaviour
 
     [Tooltip("Радиус случайного смещения от этой точки")]
     [SerializeField] private float wanderRadius = 2f;
-    public float WanderRadius => wanderRadius;
+    public float WanderRadius => Mathf.Max(0f, wanderRadius);
+
+    public NPCWaypoint GetRandomConnected()
+    {
+        if (connectedWaypoints == null || connectedWaypoints.Length == 0) return null;
+
+        int start = Random.Range(0, connectedWaypoints.Length);
+        for (int i = 0; i < connectedWaypoints.Length; i++)
+        {
+            NPCWaypoint candidate = connectedWaypoints[(start + i) % connectedWaypoints.Length];
+            if (candidate != null && candidate != this) return candidate;
+        }
+
+        return null;
+    }
 
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
