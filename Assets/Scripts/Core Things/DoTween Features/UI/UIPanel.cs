@@ -158,13 +158,25 @@ public class UIPanel : MonoBehaviour
         _canvasGroup.interactable = false;
         _canvasGroup.blocksRaycasts = false;
 
-        _content.localScale = Vector3.one;
-        _content.anchoredPosition = _originalAnchoredPos;
-        _content.localEulerAngles = Vector3.zero;
+        ResetContent();
 
         IsOpen = true;
         PushToStack();
         _showAction?.Invoke();
+    }
+
+    public void ShowInstant()
+    {
+        Init();
+        DOTween.Kill(this);
+        gameObject.SetActive(true);
+
+        ResetContent();
+        _canvasGroup.alpha = 1f;
+
+        IsOpen = true;
+        PushToStack();
+        EnableInteraction();
     }
 
     public void Hide()
@@ -185,6 +197,28 @@ public class UIPanel : MonoBehaviour
         }
 
         _hideAction?.Invoke();
+    }
+
+    public void HideInstant()
+    {
+        Init();
+        DOTween.Kill(this);
+
+        _canvasGroup.alpha = 0f;
+        _canvasGroup.interactable = false;
+        _canvasGroup.blocksRaycasts = false;
+
+        IsOpen = false;
+        RemoveFromStack();
+
+        if (gameObject.activeSelf) gameObject.SetActive(false);
+    }
+
+    private void ResetContent()
+    {
+        _content.localScale = Vector3.one;
+        _content.anchoredPosition = _originalAnchoredPos;
+        _content.localEulerAngles = Vector3.zero;
     }
 
     private void PlayFadeOnlyShow()

@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private IconsConfig resourceIcons;
     [SerializeField] private BuildingInfoPanel buildingInfo;
     [SerializeField] private UIPanel workshopPanel;
+    [SerializeField] private WorkshopPanel workshopTabs;
     [Space(10)]
     [SerializeField] private TMP_Text dublonsText;
     [SerializeField] private TMP_Text loveText;
@@ -22,6 +23,9 @@ public class UIManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        if (workshopTabs == null && workshopPanel != null)
+            workshopTabs = workshopPanel.GetComponentInChildren<WorkshopPanel>(true);
     }
 
     void OnEnable()
@@ -77,6 +81,14 @@ public class UIManager : MonoBehaviour
     {
         if (AreModalWindowOpened()) return;
         workshopPanel.Show();
+    }
+
+    public void ShowWorkshopLaboratory()
+    {
+        if (AreModalWindowOpened()) return;
+
+        workshopPanel.Show();
+        if (workshopTabs != null) workshopTabs.OpenLaboratoryTab();
     }
 
     public void ShowDormitoryPanel(Dormitory dormitory)

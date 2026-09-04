@@ -37,9 +37,11 @@ public class WorkshopPanel : MonoBehaviour
         {
             bool isActive = key == panel;
             button.SwitchState(isActive);
-            if (isActive) key.Show(); else key.Hide();
+            if (isActive) key.ShowInstant(); else key.HideInstant();
         }
     }
+
+    public void OpenLaboratoryTab() => OpenPanel(laboratoryPanel);
 
     public ItemData[] GetItemDatas => craftingConfig.GetAllItems();
     public ComponentData GetComponentData(ComponentType component) => craftingConfig.GetComponentData(component);

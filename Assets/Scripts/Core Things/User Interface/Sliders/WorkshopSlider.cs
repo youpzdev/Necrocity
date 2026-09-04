@@ -18,13 +18,18 @@ public class WorkshopSlider : MonoBehaviour
 
     [Header("Screen Size")]
     [SerializeField] private bool keepScreenSize = true;
-    [SerializeField] private float referenceDistance = 12f;
-    [SerializeField] private float referenceFieldOfView = 45f;
+    [SerializeField] private bool calibrateReferenceOnStart = true;
+    [SerializeField] private float referenceDistance = 35f;
+    [SerializeField] private float referenceFieldOfView = 65f;
     [SerializeField] private float referenceOrthographicSize = 5f;
+    [SerializeField] private float minScreenScale = 0.35f;
+    [SerializeField] private float maxScreenScale = 1.5f;
 
     private float currentFill;
     private Vector3 _baseScale;
     private Camera _camera;
+    private float _referenceViewHeight;
+    private bool _referenceCalibrated;
 
     private void Awake()
     {
@@ -37,6 +42,8 @@ public class WorkshopSlider : MonoBehaviour
     private void Start()
     {
         if (workshopPanel == null) workshopPanel = FindFirstObjectByType<WorkshopPanel>(FindObjectsInactive.Include);
+
+        CalibrateReference();
 
         CraftingQueue.Instance.RestoreCurrentData();
 
@@ -60,10 +67,13 @@ public class WorkshopSlider : MonoBehaviour
         CraftingQueue.Instance.OnCraftRedeemed -= OnCraftRedeemed;
     }
 
-    private static void OnOpenWorkshopClicked()
+    private void OnOpenWorkshopClicked()
     {
-        if (UIManager.Instance != null) UIManager.Instance.ShowWorkshopPanel();
+        if (UIManager.Instance == null) return;
 
+        var q = CraftingQueue.Instance;
+        if (q != null && q.IsReadyToCollect) UIManager.Instance.ShowWorkshopLaboratory();
+        else UIManager.Instance.ShowWorkshopPanel();
     }
 
     private void Update()
@@ -82,24 +92,44 @@ public class WorkshopSlider : MonoBehaviour
         transform.localScale = _baseScale * ScreenSizeCompensation();
     }
 
+    private void CalibrateReference()
+    {
+        if (!calibrateReferenceOnStart) return;
+
+        if (_camera == null) _camera = Camera.main;
+        if (_camera == null) return;
+
+        float height = CurrentViewHeight();
+        if (height < 0.01f) return;
+
+        _referenceViewHeight = height;
+        _referenceCalibrated = true;
+    }
+
     private float ScreenSizeCompensation()
     {
-        float reference;
-        float current;
+        float reference = ReferenceViewHeight();
+        float current = CurrentViewHeight();
+        if (reference < 0.01f || current < 0.01f) return 1f;
 
-        if (_camera.orthographic)
-        {
-            reference = Mathf.Max(0.01f, referenceOrthographicSize);
-            current = _camera.orthographicSize;
-        }
-        else
-        {
-            float distance = Vector3.Distance(_camera.transform.position, transform.position);
-            reference = Mathf.Max(0.01f, referenceDistance * Mathf.Tan(referenceFieldOfView * 0.5f * Mathf.Deg2Rad));
-            current = distance * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
-        }
+        return Mathf.Clamp(current / reference, minScreenScale, maxScreenScale);
+    }
 
-        return Mathf.Max(0.01f, current / reference);
+    private float CurrentViewHeight()
+    {
+        if (_camera.orthographic) return _camera.orthographicSize;
+
+        float distance = Vector3.Distance(_camera.transform.position, transform.position);
+        return distance * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+    }
+
+    private float ReferenceViewHeight()
+    {
+        if (_referenceCalibrated) return _referenceViewHeight;
+
+        return _camera.orthographic
+            ? referenceOrthographicSize
+            : referenceDistance * Mathf.Tan(referenceFieldOfView * 0.5f * Mathf.Deg2Rad);
     }
 
     private void OnCraftStarted() => UpdateUI();
