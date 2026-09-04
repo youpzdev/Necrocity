@@ -15,6 +15,7 @@ MonoBehaviour:
   characterName: Zombie
   icon: {fileID: 21300000, guid: e617061350fd1b346864dd73da1a4b64, type: 3}
   prefab3D: {fileID: 8136269692711646123, guid: 76872fb3344f9bd418fc5090cdfb68e2, type: 3}
+  previewRotation: 0
   colorVariants:
   - variantName: Pale
     tint: {r: 0.82, g: 0.86, b: 0.78, a: 1}

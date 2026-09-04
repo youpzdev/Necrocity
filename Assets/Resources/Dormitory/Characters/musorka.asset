@@ -15,6 +15,7 @@ MonoBehaviour:
   characterName: "\u041C\u0443\u0441\u043E\u0440\u043A\u0430"
   icon: {fileID: 21300000, guid: 2838df975c9157d4da837132435676c9, type: 3}
   prefab3D: {fileID: 7252572754427709729, guid: 68b24dee3f1b5b8449f29a06a616cb6f, type: 3}
+  previewRotation: 0
   colorVariants:
   - variantName: "\u041F\u0435\u0440\u0432\u044B\u0439"
     tint: {r: 1, g: 1, b: 1, a: 1}
