@@ -10,33 +10,65 @@ public class LabTab : BaseComponentTab
     [SerializeField] private TMP_Text craftButtonText;
     [SerializeField] private GameObject gridLockOverlay;
 
+    [Header("Craft Labels")]
+    [SerializeField] private string craftingLabel = "Крафтится...";
+    [SerializeField] private string redeemLabel = "Забрать";
+    [SerializeField] private string craftLabel = "Крафт";
+
     private ComponentData _selected;
+    private bool _subscribed;
 
     protected override void Start()
     {
         base.Start();
 
-        CraftingQueue.Instance.OnCraftStarted += OnCraftStarted;
-        CraftingQueue.Instance.OnCraftCompleted += OnCraftCompleted;
-        CraftingQueue.Instance.OnCraftCancelled += RefreshCraftUI;
+        Subscribe();
 
-        if (CraftingQueue.Instance.IsActive || CraftingQueue.Instance.IsReadyToCollect) RestoreActiveState();
-
+        if (CraftingQueue.Instance != null &&
+            (CraftingQueue.Instance.IsActive || CraftingQueue.Instance.IsReadyToCollect))
+            RestoreActiveState();
 
         RefreshCraftUI();
     }
 
-    private void OnDestroy()
+    protected override void OnEnable()
     {
+        base.OnEnable();
+        Subscribe();
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        Unsubscribe();
+    }
+
+    private void Subscribe()
+    {
+        if (_subscribed || CraftingQueue.Instance == null) return;
+
+        CraftingQueue.Instance.OnCraftStarted += OnCraftStarted;
+        CraftingQueue.Instance.OnCraftCompleted += OnCraftCompleted;
+        CraftingQueue.Instance.OnCraftCancelled += RefreshCraftUI;
+        CraftingQueue.Instance.OnCraftRedeemed += OnCraftRedeemed;
+        _subscribed = true;
+    }
+
+    private void Unsubscribe()
+    {
+        if (!_subscribed) return;
+        _subscribed = false;
+
         if (CraftingQueue.Instance == null) return;
         CraftingQueue.Instance.OnCraftStarted -= OnCraftStarted;
         CraftingQueue.Instance.OnCraftCompleted -= OnCraftCompleted;
         CraftingQueue.Instance.OnCraftCancelled -= RefreshCraftUI;
+        CraftingQueue.Instance.OnCraftRedeemed -= OnCraftRedeemed;
     }
 
     private void Update()
     {
-        if (!CraftingQueue.Instance.IsActive) return;
+        if (CraftingQueue.Instance == null || !CraftingQueue.Instance.IsActive) return;
         var q = CraftingQueue.Instance;
         progressText.text = $"{FormatTime(q.Elapsed)} / {FormatTime(q.Duration)}";
     }
@@ -64,6 +96,12 @@ public class LabTab : BaseComponentTab
         RefreshCraftUI();
     }
 
+    private void OnCraftRedeemed(ComponentType _)
+    {
+        UpdateUI();
+        RefreshCraftUI();
+    }
+
     private void RestoreActiveState()
     {
         var data = workshopPanel.GetComponentData(CraftingQueue.Instance.CurrentType);
@@ -75,6 +113,8 @@ public class LabTab : BaseComponentTab
     private void RefreshCraftUI()
     {
         var q = CraftingQueue.Instance;
+        if (q == null) return;
+
         bool active = q.IsActive;
         bool ready = q.IsReadyToCollect;
 
@@ -87,30 +127,33 @@ public class LabTab : BaseComponentTab
         {
             progressText.text = $"{FormatTime(q.Elapsed)} / {FormatTime(q.Duration)}";
             craftButton.interactable = false;
-            craftButtonText.text = "Крафтится...";
+            craftButtonText.text = craftingLabel;
         }
         else if (ready)
         {
             craftButton.interactable = true;
-            craftButtonText.text = "Забрать";
-            craftButton.onClick.AddListener(() =>
-            {
-                CraftingQueue.Instance.Redeem();
-                UpdateUI();
-            });
+            craftButtonText.text = redeemLabel;
+            craftButton.onClick.AddListener(OnRedeemClick);
         }
         else
         {
             craftButton.interactable = _selected != null;
-            craftButtonText.text = "Крафт";
+            craftButtonText.text = craftLabel;
             craftButton.onClick.AddListener(OnCraftClick);
         }
+    }
+
+    private void OnRedeemClick()
+    {
+        CraftingQueue.Instance.Redeem();
     }
 
     private void OnCraftClick()
     {
         if (_selected == null) return;
-        CraftingQueue.Instance.TryStartCraft(_selected);
+
+        var result = CraftingQueue.Instance.TryStartCraft(_selected);
+        if (result != CraftStartResult.Started) RefreshCraftUI();
     }
 
     private static string FormatTime(float seconds)

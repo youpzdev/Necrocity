@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
@@ -9,14 +10,27 @@ public class WorkshopSlider : MonoBehaviour
     [Space(5)]
     [SerializeField] private Image componentIcon;
     [SerializeField] private GameObject readyIcon;
-    [Tooltip("Если пусто — ищется в сцене при старте (префаб не в иерархии панели).")]
+    [SerializeField] private TMP_Text readyText;
+    [SerializeField] private string readyMessage = "Компонент готов";
+    [Tooltip("Если пусто, ищется в сцене при старте (префаб не в иерархии панели).")]
     [SerializeField] private WorkshopPanel workshopPanel;
     [SerializeField] private Button openWorkshopButton;
 
+    [Header("Screen Size")]
+    [SerializeField] private bool keepScreenSize = true;
+    [SerializeField] private float referenceDistance = 12f;
+    [SerializeField] private float referenceFieldOfView = 45f;
+    [SerializeField] private float referenceOrthographicSize = 5f;
+
     private float currentFill;
+    private Vector3 _baseScale;
+    private Camera _camera;
 
     private void Awake()
     {
+        _baseScale = transform.localScale;
+        _camera = Camera.main;
+
         if (workshopPanel == null) workshopPanel = FindFirstObjectByType<WorkshopPanel>(FindObjectsInactive.Include);
     }
 
@@ -24,11 +38,12 @@ public class WorkshopSlider : MonoBehaviour
     {
         if (workshopPanel == null) workshopPanel = FindFirstObjectByType<WorkshopPanel>(FindObjectsInactive.Include);
 
-        CraftingQueue.Instance.RestoreCurrentData(workshopPanel);
+        CraftingQueue.Instance.RestoreCurrentData();
 
         CraftingQueue.Instance.OnCraftStarted += OnCraftStarted;
         CraftingQueue.Instance.OnCraftCompleted += OnCraftCompleted;
         CraftingQueue.Instance.OnCraftCancelled += OnCraftCancelled;
+        CraftingQueue.Instance.OnCraftRedeemed += OnCraftRedeemed;
         if (openWorkshopButton) openWorkshopButton.onClick.AddListener(OnOpenWorkshopClicked);
 
         UpdateUI();
@@ -42,6 +57,7 @@ public class WorkshopSlider : MonoBehaviour
         CraftingQueue.Instance.OnCraftStarted -= OnCraftStarted;
         CraftingQueue.Instance.OnCraftCompleted -= OnCraftCompleted;
         CraftingQueue.Instance.OnCraftCancelled -= OnCraftCancelled;
+        CraftingQueue.Instance.OnCraftRedeemed -= OnCraftRedeemed;
     }
 
     private static void OnOpenWorkshopClicked()
@@ -56,11 +72,43 @@ public class WorkshopSlider : MonoBehaviour
         UpdateFill(CraftingQueue.Instance.Progress);
     }
 
+    private void LateUpdate()
+    {
+        if (!keepScreenSize) return;
+
+        if (_camera == null) _camera = Camera.main;
+        if (_camera == null) return;
+
+        transform.localScale = _baseScale * ScreenSizeCompensation();
+    }
+
+    private float ScreenSizeCompensation()
+    {
+        float reference;
+        float current;
+
+        if (_camera.orthographic)
+        {
+            reference = Mathf.Max(0.01f, referenceOrthographicSize);
+            current = _camera.orthographicSize;
+        }
+        else
+        {
+            float distance = Vector3.Distance(_camera.transform.position, transform.position);
+            reference = Mathf.Max(0.01f, referenceDistance * Mathf.Tan(referenceFieldOfView * 0.5f * Mathf.Deg2Rad));
+            current = distance * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        }
+
+        return Mathf.Max(0.01f, current / reference);
+    }
+
     private void OnCraftStarted() => UpdateUI();
 
     private void OnCraftCompleted(ComponentType _) => UpdateUI();
 
     private void OnCraftCancelled() => UpdateUI();
+
+    private void OnCraftRedeemed(ComponentType _) => UpdateUI();
 
     private void UpdateUI()
     {
@@ -79,12 +127,20 @@ public class WorkshopSlider : MonoBehaviour
 
         bool ready = q.IsReadyToCollect;
         if (readyIcon) readyIcon.SetActive(ready);
+        SetReadyText(ready);
 
         Sprite icon = q.CurrentData?.icon ?? GetIcon(q.CurrentType);
         SetIcon(icon);
 
         float fillTarget = ready ? 1f : q.Progress;
         UpdateFill(fillTarget);
+    }
+
+    private void SetReadyText(bool ready)
+    {
+        if (!readyText) return;
+        readyText.text = readyMessage;
+        readyText.gameObject.SetActive(ready);
     }
 
     private void SetIcon(Sprite sprite)
