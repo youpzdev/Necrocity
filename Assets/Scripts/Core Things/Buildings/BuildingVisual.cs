@@ -1,13 +1,19 @@
-using System;
 using UnityEngine;
 
+[RequireComponent(typeof(ModularBuilding))]
 public class BuildingVisual : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private ResourceGainer resourceGainer;
+    [SerializeField] private ModularBuilding modularBuilding;
 
-    [Space(15)]
-    [SerializeField] private LevelObjects[] levelChanges;
+    private bool _applied;
+
+    private void Awake()
+    {
+        if (resourceGainer == null) resourceGainer = GetComponent<ResourceGainer>();
+        if (modularBuilding == null) modularBuilding = GetComponent<ModularBuilding>();
+    }
 
     private void OnEnable()
     {
@@ -21,36 +27,29 @@ public class BuildingVisual : MonoBehaviour
 
     private void Start()
     {
-        UpdateVisual();
-    }
-
-    private void UpdateVisual()
-    {
-        int currentLevel = resourceGainer.Level;
-        foreach (var change in levelChanges)
-        {
-            bool active = change.level <= currentLevel;
-            foreach (var obj in change.buildingParts) obj.SetActive(active);
-        }
+        modularBuilding.ApplyLevel(resourceGainer.Level);
+        _applied = true;
     }
 
     private void OnLevelChanged(LevelChangedEvent evt)
     {
         if (evt.Gainer != resourceGainer) return;
-        UpdateVisual();
+
+        if (_applied)
+        {
+            modularBuilding.SetLevel(resourceGainer.Level);
+            return;
+        }
+
+        modularBuilding.ApplyLevel(resourceGainer.Level);
+        _applied = true;
     }
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
         if (resourceGainer == null) resourceGainer = GetComponent<ResourceGainer>();
+        if (modularBuilding == null) modularBuilding = GetComponent<ModularBuilding>();
     }
 #endif
-
-    [Serializable]
-    public class LevelObjects
-    {
-        public GameObject[] buildingParts;
-        public int level;
-    }
 }

@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -34,6 +35,13 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float fovSmooth = 10f;
     [SerializeField] private float positionSmooth = 0.08f;
 
+    [Header("Focus")]
+    [SerializeField] private float focusMoveDuration = 0.6f;
+    [SerializeField] private float focusReturnDuration = 0.6f;
+    [SerializeField] private float focusDistance = 0f;
+    [SerializeField] private float focusHeightOffset = 0f;
+    [SerializeField] private Ease focusEase = Ease.InOutSine;
+
     [Header("Limits")]
     [SerializeField] private bool useManualLimits = false;
     [SerializeField] private Vector2 xLimits = new(-10f, 10f);
@@ -58,6 +66,13 @@ public class CameraController : MonoBehaviour
 
     private float _prevPinchDist;
     private bool _pinchActive;
+
+    private Transform _focusTarget;
+    private Sequence _focusSequence;
+    private bool _focusActive;
+    private bool _releasing;
+    private Vector3 _returnPosition;
+    private Quaternion _returnRotation;
 
     void Awake()
     {
@@ -89,13 +104,86 @@ public class CameraController : MonoBehaviour
         InputManager.Instance.OnMiddleMouseChanged -= HandleMiddleMouseChanged;
     }
 
+    void OnDestroy()
+    {
+        DOTween.Kill(this);
+    }
+
+    public void FocusOn(Transform target, float duration)
+    {
+        if (target == null) return;
+
+        KillFocusSequence();
+
+        if (!_focusActive)
+        {
+            _returnPosition = transform.position;
+            _returnRotation = transform.rotation;
+            _focusActive = true;
+        }
+
+        _focusTarget = target;
+        _releasing = false;
+
+        Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
+        float distance = focusDistance > 0f ? focusDistance : _distance;
+        Vector3 destination = target.position + Vector3.up * focusHeightOffset + rot * new Vector3(0f, 0f, -distance);
+
+        _focusSequence = DOTween.Sequence().SetId(this).SetUpdate(true);
+        _focusSequence.Join(transform.DOMove(destination, focusMoveDuration).SetEase(focusEase));
+        _focusSequence.Join(transform.DORotateQuaternion(rot, focusMoveDuration).SetEase(focusEase));
+
+        if (duration > 0f)
+        {
+            _focusSequence.AppendInterval(duration);
+            _focusSequence.OnComplete(OnHoldFinished);
+        }
+    }
+
+    public void ReleaseFocus()
+    {
+        if (!_focusActive) return;
+
+        KillFocusSequence();
+        _focusTarget = null;
+        _releasing = true;
+
+        _focusSequence = DOTween.Sequence().SetId(this).SetUpdate(true);
+        _focusSequence.Join(transform.DOMove(_returnPosition, focusReturnDuration).SetEase(focusEase));
+        _focusSequence.Join(transform.DORotateQuaternion(_returnRotation, focusReturnDuration).SetEase(focusEase));
+        _focusSequence.OnComplete(FinishRelease);
+    }
+
+    private void OnHoldFinished()
+    {
+        _focusSequence = null;
+        ReleaseFocus();
+    }
+
+    private void KillFocusSequence()
+    {
+        if (_focusSequence == null) return;
+        _focusSequence.Kill();
+        _focusSequence = null;
+    }
+
+    private void FinishRelease()
+    {
+        _focusSequence = null;
+        _velocity = Vector3.zero;
+        _releasing = false;
+        _focusActive = false;
+    }
+
+    private bool InputLocked() => _focusActive || IsBlocked();
+
     private void HandleRotateChanged(bool held) => _rotateHeld = held;
 
     private void HandleMiddleMouseChanged(bool held) => _middleHeld = held;
 
     private void HandleLook(Vector2 delta)
     {
-        if (IsBlocked()) return;
+        if (InputLocked()) return;
 
         if (_middleHeld)
             _panDelta += delta * panSensitivity;
@@ -106,19 +194,19 @@ public class CameraController : MonoBehaviour
     // Pan fires only on touch second finger
     private void HandlePan(Vector2 delta)
     {
-        if (IsBlocked() || _middleHeld) return;
+        if (InputLocked() || _middleHeld) return;
         _panDelta += delta * panSensitivity;
     }
 
     private void HandleScroll(float scroll)
     {
-        if (IsBlocked()) return;
+        if (InputLocked()) return;
         fov -= scroll * scrollSensitivity;
     }
 
     private void HandlePinch(float currDist)
     {
-        if (IsBlocked()) return;
+        if (InputLocked()) return;
 
         if (_pinchActive && currDist > 0f)
             fov += (_prevPinchDist - currDist) * pinchSensitivity;
@@ -129,6 +217,8 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+        if (_focusActive && !_releasing && _focusTarget == null) ReleaseFocus();
+
         if (_pinchActive && PressedTouchCount() < 2)
         {
             _pinchActive = false;
@@ -154,6 +244,8 @@ public class CameraController : MonoBehaviour
     void LateUpdate()
     {
         cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, fov, Time.deltaTime * fovSmooth);
+
+        if (_focusActive) return;
 
         Vector3 center = baseTarget.position + _centerOffset + Vector3.up * _verticalOffset;
         Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
