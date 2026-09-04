@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class WorkshopPanel : MonoBehaviour
@@ -13,12 +11,8 @@ public class WorkshopPanel : MonoBehaviour
     [SerializeField] private ButtonStyler componentsButton;
     [SerializeField] private ButtonStyler laboratoryButton;
 
-    [Header("Workshop")]
-    [SerializeField] private Transform workshopGrid;
-
     [Header("Config")]
     [SerializeField] private CraftingConfig craftingConfig;
-    [SerializeField] private IconsConfig iconsConfig;
 
     private Dictionary<UIPanel, ButtonStyler> _panelButtons;
 
@@ -47,19 +41,7 @@ public class WorkshopPanel : MonoBehaviour
         }
     }
 
-    public (Sprite, int)[] BuildIngredients(ItemData.Ingredient[] recipe)
-    {
-        var result = new (Sprite, int)[recipe.Length];
-        for (int i = 0; i < recipe.Length; i++)
-        {
-            var data = craftingConfig.GetComponentData(recipe[i].component);
-            result[i] = (data.icon, recipe[i].amount);
-        }
-        return result;
-    }
-
     public ItemData[] GetItemDatas => craftingConfig.GetAllItems();
-    public ItemData[] GetItemsInInventory => craftingConfig.GetAllItems().Where(item => InventoryManager.Instance.GetItem(item.type) > 0).ToArray();
     public ComponentData GetComponentData(ComponentType component) => craftingConfig.GetComponentData(component);
     public ComponentData[] GetAllComponentDatas => craftingConfig.GetAllComponents();
 

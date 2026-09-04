@@ -10,6 +10,11 @@ public abstract class BaseComponentTab : MonoBehaviour
     [SerializeField] protected Transform componentGrid;
     [SerializeField] protected GameObject componentPrefab;
 
+    [Header("Rarity Colors")]
+    [SerializeField] private Color commonColor = new Color(0.36f, 0.68f, 1f, 1f);
+    [SerializeField] private Color rareColor = new Color(0.65f, 0.4f, 1f, 1f);
+    [SerializeField] private Color epicColor = new Color(1f, 0.82f, 0.25f, 1f);
+
     protected WorkshopPanel workshopPanel;
     [SerializeField] protected bool isChoosen = false;
 
@@ -34,8 +39,19 @@ public abstract class BaseComponentTab : MonoBehaviour
                 icon: compData.icon,
                 title: compData.name,
                 amount: amount,
-                clickAction: () => OnComponentClick(compData)
+                clickAction: () => OnComponentClick(compData),
+                rarityColor: GetRarityColor(compData.rarity)
             );
+        }
+    }
+
+    protected Color GetRarityColor(ComponentRarity rarity)
+    {
+        switch (rarity)
+        {
+            case ComponentRarity.Rare: return rareColor;
+            case ComponentRarity.Epic: return epicColor;
+            default: return commonColor;
         }
     }
 
@@ -62,7 +78,6 @@ public abstract class BaseComponentTab : MonoBehaviour
 
     private void OnInventoryChanged(InventoryChangedEvent _)
     {
-        Debug.Log($"[{name}] OnInventoryChanged fired");
         UpdateUI();
     }
 }

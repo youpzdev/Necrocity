@@ -13,6 +13,7 @@ public class ItemData : ScriptableObject
 
     public ItemType type;
     public Sprite icon;
+    public GameObject prefab3D;
     [TextArea(5,10)] public string description;
     public Ingredient[] recipe;
 }

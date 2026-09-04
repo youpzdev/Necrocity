@@ -13,6 +13,10 @@ public class WorkshopTab : MonoBehaviour
     [SerializeField] private Button craftButton;
     [SerializeField] private TMP_Text craftButtonText;
 
+    [Header("Labels")]
+    [SerializeField] private string craftLabel = "Скрафтить";
+    [SerializeField] private string notEnoughLabel = "Не хватает ресурсов";
+
     private WorkshopPanel _workshopPanel;
     private ItemData _selected;
 
@@ -23,7 +27,8 @@ public class WorkshopTab : MonoBehaviour
 
     private void UpdateUI()
     {
-        foreach (Transform old in itemGrid) Pooling.Destroy(old.gameObject);
+        for (int i = itemGrid.childCount - 1; i >= 0; i--)
+            Pooling.Destroy(itemGrid.GetChild(i).gameObject);
 
         foreach (var data in _workshopPanel.GetItemDatas)
         {
@@ -33,7 +38,8 @@ public class WorkshopTab : MonoBehaviour
                 icon: data.icon,
                 title: data.name,
                 clickAction: () => OnItemClick(data),
-                itemData: data
+                itemData: data,
+                available: CanCraft(data)
             );
         }
     }
@@ -42,12 +48,21 @@ public class WorkshopTab : MonoBehaviour
     {
         _selected = data;
 
-        foreach (Transform old in recipeGrid) Pooling.Destroy(old.gameObject);
-
         titleText.text = data.name;
         iconImage.sprite = data.icon;
 
-        foreach (var ingredient in data.recipe)
+        BuildRecipe();
+        RefreshCraftButton();
+    }
+
+    private void BuildRecipe()
+    {
+        for (int i = recipeGrid.childCount - 1; i >= 0; i--)
+            Pooling.Destroy(recipeGrid.GetChild(i).gameObject);
+
+        if (_selected == null) return;
+
+        foreach (var ingredient in _selected.recipe)
         {
             var compData = _workshopPanel.GetComponentData(ingredient.component);
             if (compData == null)
@@ -56,12 +71,17 @@ public class WorkshopTab : MonoBehaviour
                 continue;
             }
 
+            int owned = InventoryManager.Instance.GetComponent(ingredient.component);
+
             WorkshopComponent slot = Pooling.Instantiate(recipePrefab, recipeGrid)
                                             .GetComponent<WorkshopComponent>();
-            slot.Init(icon: compData.icon, amount: ingredient.amount);
+            slot.Init(
+                icon: compData.icon,
+                amount: owned,
+                available: owned >= ingredient.amount,
+                requiredAmount: ingredient.amount
+            );
         }
-
-        RefreshCraftButton();
     }
 
     private void RefreshCraftButton()
@@ -74,7 +94,7 @@ public class WorkshopTab : MonoBehaviour
 
         bool canCraft = CanCraft(_selected);
         craftButton.interactable = canCraft;
-        craftButtonText.text = canCraft ? "Скрафтить" : "Не хватает ресурсов";
+        craftButtonText.text = canCraft ? craftLabel : notEnoughLabel;
 
         craftButton.onClick.RemoveAllListeners();
         craftButton.onClick.AddListener(OnCraftClick);
@@ -113,6 +133,7 @@ public class WorkshopTab : MonoBehaviour
     private void OnInventoryChanged(InventoryChangedEvent _)
     {
         UpdateUI();
+        BuildRecipe();
         RefreshCraftButton();
     }
 }
