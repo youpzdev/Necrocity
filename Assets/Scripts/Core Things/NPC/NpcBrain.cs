@@ -42,6 +42,7 @@ public class NPCBrain : MonoBehaviour
     {
         _agent = GetComponent<NavMeshAgent>();
         _agent.speed = moveSpeed;
+        _agent.avoidancePriority = Random.Range(35, 66);
         _agent.angularSpeed = angularSpeed;
         _agent.acceleration = acceleration;
         _agent.stoppingDistance = Mathf.Max(0.05f, stoppingDistance);
