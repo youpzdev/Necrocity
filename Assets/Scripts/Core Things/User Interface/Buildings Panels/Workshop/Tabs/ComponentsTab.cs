@@ -15,8 +15,6 @@ public class ComponentsTab : BaseComponentTab
     [SerializeField] private string loveLabel = "Любви";
     [SerializeField] private string sellFormat = "Продать за {0} {1}";
     [SerializeField] private string emptySellLabel = "Продать";
-    [SerializeField] private string emptyTitle = "";
-    [SerializeField] private string emptyDescription = "";
 
     private ComponentData selectedComponent;
 
@@ -49,7 +47,6 @@ public class ComponentsTab : BaseComponentTab
     {
         base.OnComponentClick(data);
         selectedComponent = data;
-        if (iconImage != null) iconImage.enabled = true;
         RefreshSelection();
     }
 
@@ -79,15 +76,7 @@ public class ComponentsTab : BaseComponentTab
     private void ClearSelection()
     {
         selectedComponent = null;
-        isChoosen = false;
-
-        if (titleText != null) titleText.text = emptyTitle;
-        if (descText != null) descText.text = emptyDescription;
-        if (iconImage != null)
-        {
-            iconImage.sprite = null;
-            iconImage.enabled = false;
-        }
+        ShowEmptyInfo();
 
         amountPanel.SetActive(false);
         amountText.text = string.Empty;

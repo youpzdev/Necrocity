@@ -17,13 +17,19 @@ public class WorkshopTab : MonoBehaviour
     [SerializeField] private string craftLabel = "Скрафтить";
     [SerializeField] private string notEnoughLabel = "Не хватает ресурсов";
 
+    [Header("Empty State")]
+    [SerializeField] private string emptyTitle = "Ничего не выбрано";
+    [SerializeField] private string emptyCraftLabel = "Выберите предмет";
+
     private WorkshopPanel _workshopPanel;
     private ItemData _selected;
 
-    private void Awake() =>
-        _workshopPanel = GetComponentInParent<WorkshopPanel>();
-
-    private void Start() => UpdateUI();
+    private void Awake()
+    {
+        _workshopPanel = GetComponentInParent<WorkshopPanel>(true);
+        craftButton.onClick.AddListener(OnCraftClick);
+        ClearSelection();
+    }
 
     private void UpdateUI()
     {
@@ -49,10 +55,29 @@ public class WorkshopTab : MonoBehaviour
         _selected = data;
 
         titleText.text = data.name;
-        iconImage.sprite = data.icon;
+        ApplyIcon(data.icon);
 
         BuildRecipe();
         RefreshCraftButton();
+    }
+
+    private void ClearSelection()
+    {
+        _selected = null;
+
+        if (titleText != null) titleText.text = emptyTitle;
+        ApplyIcon(null);
+
+        BuildRecipe();
+        RefreshCraftButton();
+    }
+
+    private void ApplyIcon(Sprite icon)
+    {
+        if (iconImage == null) return;
+
+        iconImage.sprite = icon;
+        iconImage.enabled = icon != null;
     }
 
     private void BuildRecipe()
@@ -89,15 +114,13 @@ public class WorkshopTab : MonoBehaviour
         if (_selected == null)
         {
             craftButton.interactable = false;
+            craftButtonText.text = emptyCraftLabel;
             return;
         }
 
         bool canCraft = CanCraft(_selected);
         craftButton.interactable = canCraft;
         craftButtonText.text = canCraft ? craftLabel : notEnoughLabel;
-
-        craftButton.onClick.RemoveAllListeners();
-        craftButton.onClick.AddListener(OnCraftClick);
     }
 
     private void OnCraftClick()
@@ -123,6 +146,8 @@ public class WorkshopTab : MonoBehaviour
     private void OnEnable()
     {
         EventBus<InventoryChangedEvent>.Subscribe(OnInventoryChanged, this);
+        ClearSelection();
+        UpdateUI();
     }
 
     private void OnDisable()

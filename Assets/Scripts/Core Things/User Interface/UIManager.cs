@@ -55,7 +55,12 @@ public class UIManager : MonoBehaviour
 
     public bool AreModalWindowOpened()
     {
-        foreach (var item in uiPanels) if (item.activeSelf) return true;
+        foreach (var item in uiPanels)
+        {
+            if (item == null || !item.activeSelf) continue;
+            if (item.TryGetComponent(out UIPanel panel) && !panel.IsOpen) continue;
+            return true;
+        }
         return false;
     }
 

@@ -28,20 +28,34 @@ public class UIPanel : MonoBehaviour
     private Vector2 _slideOffset;
     private Action _showAction;
     private Action _hideAction;
+    private bool _initialized;
 
     private static readonly List<UIPanel> _panelStack = new List<UIPanel>();
     private static readonly HashSet<UIPanel> _panelSet = new HashSet<UIPanel>();
 
     private static bool _backListenerRegistered;
 
-    private void Awake()
+    public bool IsOpen { get; private set; }
+
+    private void Awake() => Init();
+
+    private void Init()
     {
+        if (_initialized) return;
+        _initialized = true;
+
         if (_canvasGroup == null) _canvasGroup = GetComponent<CanvasGroup>();
         if (_content == null) _content = GetComponent<RectTransform>();
 
         _originalAnchoredPos = _content.anchoredPosition;
         InitSlideOffset();
         InitActions();
+    }
+
+    private void OnDisable()
+    {
+        IsOpen = false;
+        RemoveFromStack();
     }
 
     private void OnDestroy() => RemoveFromStack();
@@ -136,6 +150,7 @@ public class UIPanel : MonoBehaviour
 
     public void Show()
     {
+        Init();
         DOTween.Kill(this);
         gameObject.SetActive(true);
 
@@ -147,18 +162,28 @@ public class UIPanel : MonoBehaviour
         _content.anchoredPosition = _originalAnchoredPos;
         _content.localEulerAngles = Vector3.zero;
 
+        IsOpen = true;
         PushToStack();
         _showAction?.Invoke();
     }
 
     public void Hide()
     {
+        Init();
         DOTween.Kill(this);
 
         _canvasGroup.interactable = false;
         _canvasGroup.blocksRaycasts = false;
 
+        IsOpen = false;
         RemoveFromStack();
+
+        if (!gameObject.activeSelf)
+        {
+            _canvasGroup.alpha = 0f;
+            return;
+        }
+
         _hideAction?.Invoke();
     }
 

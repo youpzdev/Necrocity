@@ -33,7 +33,11 @@ public class WorkshopComponent : MonoBehaviour
     {
         _itemData = itemData;
 
-        if (imageIcon) imageIcon.sprite = icon;
+        if (imageIcon)
+        {
+            imageIcon.sprite = icon;
+            imageIcon.enabled = icon != null;
+        }
         if (titleText) titleText.text = title;
         if (button)
         {

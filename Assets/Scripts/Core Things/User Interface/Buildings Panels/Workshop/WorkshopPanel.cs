@@ -27,9 +27,9 @@ public class WorkshopPanel : MonoBehaviour
 
         foreach (var (panel, button) in _panelButtons)
             button.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => OpenPanel(panel));
-
-        OpenPanel(workshopPanel);
     }
+
+    private void OnEnable() => OpenPanel(workshopPanel);
 
     public void OpenPanel(UIPanel panel)
     {
