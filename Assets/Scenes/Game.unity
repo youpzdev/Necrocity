@@ -15417,6 +15417,8 @@ GameObject:
   - component: {fileID: 1809557289}
   - component: {fileID: 1809557287}
   - component: {fileID: 1809557288}
+  - component: {fileID: 1809557291}
+  - component: {fileID: 1809557290}
   m_Layer: 0
   m_Name: Dormitory
   m_TagString: Untagged
@@ -15480,6 +15482,39 @@ Transform:
   - {fileID: 7808161691681254642}
   m_Father: {fileID: 543450653442444353}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1809557290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1809557286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0572fc8a4031e954586bc3dec485f66a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &1809557291
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1809557286}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.592031, y: 5.0239553, z: 4.413316}
+  m_Center: {x: 0.15311396, y: -0.5785682, z: 1.8450422}
 --- !u!1 &1814381902
 GameObject:
   m_ObjectHideFlags: 0
@@ -18120,8 +18155,6 @@ GameObject:
   - component: {fileID: 2109608456402414050}
   - component: {fileID: 859074714790396566}
   - component: {fileID: 5880368743597161691}
-  - component: {fileID: 5880368743597161693}
-  - component: {fileID: 5880368743597161692}
   m_Layer: 0
   m_Name: dormitory_2
   m_TagString: Untagged
@@ -18282,8 +18315,6 @@ GameObject:
   - component: {fileID: 640394483384485977}
   - component: {fileID: 5558719937615169321}
   - component: {fileID: 2925317144553692789}
-  - component: {fileID: 5558719937615169323}
-  - component: {fileID: 5558719937615169322}
   m_Layer: 0
   m_Name: dormitory_1
   m_TagString: Untagged
@@ -18679,39 +18710,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3761411248001482415}
   m_Mesh: {fileID: -7217026068353261311, guid: aa40b088284d73441ac27e44b1feee43, type: 3}
---- !u!114 &5558719937615169322
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3761411248001482415}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0572fc8a4031e954586bc3dec485f66a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!65 &5558719937615169323
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3761411248001482415}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.026735162, y: 0.050239526, z: 0.026669376}
-  m_Center: {x: 0.007539915, y: 0.003300644, z: -0.00578573}
 --- !u!33 &5584583643154061841
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -18870,39 +18868,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &5880368743597161692
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3383410919667682303}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0572fc8a4031e954586bc3dec485f66a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!65 &5880368743597161693
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3383410919667682303}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.041743256, y: 0.030167378, z: 0.032327667}
-  m_Center: {x: 0.012536536, y: 0.0015298685, z: 0.0013602885}
 --- !u!1001 &6025389962622809258
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19492,8 +19457,6 @@ GameObject:
   - component: {fileID: 7808161691681254642}
   - component: {fileID: 8741562567905721629}
   - component: {fileID: 7467021716784038909}
-  - component: {fileID: 8741562567905721631}
-  - component: {fileID: 8741562567905721630}
   m_Layer: 0
   m_Name: dormitory_3
   m_TagString: Untagged
@@ -19905,39 +19868,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7393749263695786444}
   m_Mesh: {fileID: -8832299459898629836, guid: aa40b088284d73441ac27e44b1feee43, type: 3}
---- !u!114 &8741562567905721630
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7393749263695786444}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0572fc8a4031e954586bc3dec485f66a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!65 &8741562567905721631
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7393749263695786444}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.026274037, y: 0.026801882, z: 0.034637287}
-  m_Center: {x: 0.0092851715, y: 0.001793721, z: -0.0031753937}
 --- !u!33 &8741562568476907757
 MeshFilter:
   m_ObjectHideFlags: 0
