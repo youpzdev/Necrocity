@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class BuildingClickHandler : MonoBehaviour
 {
     private IClickableBuilding building;
@@ -9,7 +10,7 @@ public class BuildingClickHandler : MonoBehaviour
         building = GetComponentInParent<IClickableBuilding>();
     }
 
-    private void OnMouseDown()
+    public void HandleClick()
     {
         building?.OnClick();
     }
