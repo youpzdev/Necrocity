@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 9
   icon: {fileID: 0}
+  prefab3D: {fileID: 4318072590092868598, guid: 587d6bcbcb331e949b29a0f4a53d9903, type: 3}
   description: 
   recipe:
   - component: 1
