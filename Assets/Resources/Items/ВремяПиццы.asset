@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\u0412\u0440\u0435\u043C\u044F\u041F\u0438\u0446\u0446\u044B"
   m_EditorClassIdentifier: 
   type: 15
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 477d29df208ffd046b92c9e424e3d899, type: 3}
   prefab3D: {fileID: 6517915317238099139, guid: e895a2503f0e2ac498c6dfc19407c3ed, type: 3}
   description: 
   recipe:
