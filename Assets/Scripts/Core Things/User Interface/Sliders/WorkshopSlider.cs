@@ -22,6 +22,7 @@ public class WorkshopSlider : MonoBehaviour
     [SerializeField] private float referenceDistance = 35f;
     [SerializeField] private float referenceFieldOfView = 65f;
     [SerializeField] private float referenceOrthographicSize = 5f;
+    [SerializeField] private float badgeScale = 2.5f;
     [SerializeField] private float minScreenScale = 0.35f;
     [SerializeField] private float maxScreenScale = 1.5f;
 
@@ -89,7 +90,7 @@ public class WorkshopSlider : MonoBehaviour
         if (_camera == null) _camera = Camera.main;
         if (_camera == null) return;
 
-        transform.localScale = _baseScale * ScreenSizeCompensation();
+        transform.localScale = _baseScale * (ScreenSizeCompensation() * Mathf.Max(0.01f, badgeScale));
     }
 
     private void CalibrateReference()
