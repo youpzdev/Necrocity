@@ -1,140 +1,203 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(NavMeshAgent))]
 public class NPCBrain : MonoBehaviour
 {
+    private const float ArrivalCheckDelay = 0.25f;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private float rotateSpeed = 8f;
-    [SerializeField] private float gravity = -15f;
-    [SerializeField] private float stuckTimeout = 3f;      // сек без прогресса → смена цели
+    [SerializeField] private float angularSpeed = 240f;
+    [SerializeField] private float acceleration = 8f;
+    [SerializeField] private float stoppingDistance = 0.4f;
 
-    [Header("Waypoints")]
-    [SerializeField] private NPCWaypoint[] homeWaypoints;  // waypoints этого острова
-    [SerializeField] private float arrivalDistance = 0.4f;
+    [Header("Destinations")]
+    [SerializeField] private float wanderRadius = 12f;
+    [SerializeField] private float sampleRadius = 2f;
+    [SerializeField] private int sampleAttempts = 8;
 
-    [Header("Wandering")]
-    [SerializeField] private float waitTimeMin = 1f;
-    [SerializeField] private float waitTimeMax = 4f;
-    [SerializeField][Range(0f, 1f)] private float chanceToWanderLocally = 0.6f; // vs перейти к другому waypoint
+    [Header("Idle")]
+    [SerializeField] private float idleTimeMin = 2f;
+    [SerializeField] private float idleTimeMax = 6f;
 
     [Header("Animation")]
     [SerializeField] private Animator animator;
     [SerializeField] private string movingParameter = "Moving";
+    [SerializeField] private float movingSpeedThreshold = 0.1f;
 
-    [Header("Ground Check")]
-    [SerializeField] private float groundCheckDistance = 1.5f;   // raycast вниз с целевой точки
-    [SerializeField] private float groundProbeHeight = 0.5f;
-    [SerializeField] private float edgeProbeDistance = 0.5f;
-    [SerializeField] private float fallRecoveryDepth = 5f;
-    [SerializeField] private float spawnGroundSearchDepth = 50f;
-    [SerializeField] private LayerMask groundMask;
-
-    private CharacterController _cc;
+    private NavMeshAgent _agent;
     private int _movingHash;
     private bool _canAnimate;
     private bool _moving;
-    private Vector3 _target;
-    private float _verticalVelocity;
-    private float _waitTimer;
-    private bool _waiting;
-
-    private NPCWaypoint[] _waypoints;
-    private NPCWaypoint _currentWaypoint;
-    private Vector3 _lastPosition;
-    private float _stuckTimer;
-    private int _groundLayers;
-    private float _edgeProbe;
-    private bool _ready;
-    private bool _initialized;
+    private bool _idle;
+    private float _idleTimer;
+    private float _arrivalGuard;
+    private bool _restartPending;
+    private bool _offNavMeshLogged;
+    private NPCWaypoint _lastPoint;
 
     private void Awake()
     {
-        EnsureInitialized();
-    }
+        _agent = GetComponent<NavMeshAgent>();
+        _agent.speed = moveSpeed;
+        _agent.angularSpeed = angularSpeed;
+        _agent.acceleration = acceleration;
+        _agent.stoppingDistance = Mathf.Max(0.05f, stoppingDistance);
+        _agent.autoBraking = true;
+        _agent.updatePosition = true;
+        _agent.updateRotation = true;
 
-    private void EnsureInitialized()
-    {
-        if (_initialized) return;
-        _initialized = true;
-
-        _cc = GetComponent<CharacterController>();
         if (animator == null) animator = GetComponentInChildren<Animator>(true);
         if (!string.IsNullOrEmpty(movingParameter)) _movingHash = Animator.StringToHash(movingParameter);
-
         _canAnimate = HasMovingParameter();
-        _groundLayers = groundMask.value != 0 ? groundMask.value : Physics.DefaultRaycastLayers;
-        _edgeProbe = Mathf.Max(edgeProbeDistance, _cc.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z) + 0.1f);
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        if (_ready) return;
-
-        SetWaypoints(homeWaypoints);
-        if (!_ready) Debug.LogWarning($"[NPCBrain] {name}: нет waypoints!", this);
-    }
-
-    public void SetWaypoints(NPCWaypoint[] waypoints)
-    {
-        EnsureInitialized();
-
-        _waypoints = Compact(waypoints);
-        _ready = _waypoints.Length > 0;
-
-        ApplyMoving(false);
-
-        if (!_ready)
-        {
-            _currentWaypoint = null;
-            return;
-        }
-
-        _waiting = false;
-        _stuckTimer = 0f;
-        _verticalVelocity = 0f;
-        _lastPosition = transform.position;
-
-        _currentWaypoint = GetNearestWaypoint();
-        if (!IsOverGround(transform.position, spawnGroundSearchDepth)) Teleport(_currentWaypoint.transform.position);
-
-        PickNextTarget();
+        _restartPending = true;
     }
 
     private void Update()
     {
-        ApplyGravity();
-
-        if (!_ready)
+        if (!_agent.isOnNavMesh)
         {
-            _cc.Move(new Vector3(0f, _verticalVelocity, 0f) * Time.deltaTime);
+            ApplyMoving(false);
+            WarnOffNavMesh();
             return;
         }
 
-        if (RecoverFromFall()) return;
-
-        if (_waiting)
+        if (_restartPending)
         {
-            _waitTimer -= Time.deltaTime;
-            SetMoving(false);
-            if (_waitTimer <= 0f) PickNextTarget();
+            _restartPending = false;
+            _offNavMeshLogged = false;
+            _lastPoint = null;
+            _agent.isStopped = false;
+            PickDestination();
+        }
+
+        ApplyMoving(_agent.velocity.sqrMagnitude > movingSpeedThreshold * movingSpeedThreshold);
+
+        if (_idle)
+        {
+            _idleTimer -= Time.deltaTime;
+            if (_idleTimer <= 0f) PickDestination();
             return;
         }
 
-        if (HorizontalDistance(transform.position, _target) <= Mathf.Max(0.05f, arrivalDistance))
+        if (_arrivalGuard > 0f)
         {
-            SetMoving(false);
-            StartWaiting();
+            _arrivalGuard -= Time.deltaTime;
             return;
         }
 
-        bool moved = MoveToTarget();
-        SetMoving(moved);
+        if (_agent.pathPending) return;
 
-        if (moved) CheckStuck();
+        if (_agent.pathStatus == NavMeshPathStatus.PathInvalid)
+        {
+            StartIdle();
+            return;
+        }
+
+        if (_agent.remainingDistance > _agent.stoppingDistance) return;
+        if (_agent.hasPath && _agent.velocity.sqrMagnitude > 0.01f) return;
+
+        StartIdle();
     }
 
-    // ─── Движение ────────────────────────────────────────────────────────────
+    private void PickDestination()
+    {
+        Vector3 destination;
+        if (!TryPickPointDestination(out destination) && !TryPickWanderDestination(out destination))
+        {
+            StartIdle();
+            return;
+        }
+
+        _idle = false;
+        _arrivalGuard = ArrivalCheckDelay;
+        _agent.isStopped = false;
+        _agent.SetDestination(destination);
+    }
+
+    private bool TryPickPointDestination(out Vector3 destination)
+    {
+        destination = transform.position;
+
+        IReadOnlyList<NPCWaypoint> points = NPCWaypoint.All;
+        if (points.Count == 0) return false;
+
+        int attempts = Mathf.Max(1, sampleAttempts);
+        for (int i = 0; i < attempts; i++)
+        {
+            NPCWaypoint point = PickWeighted(points);
+            if (points.Count > 1 && point == _lastPoint) continue;
+
+            float radius = Mathf.Max(sampleRadius, point.WanderRadius);
+            if (!TrySample(point.GetRandomPoint(), radius, out Vector3 hit)) continue;
+
+            _lastPoint = point;
+            destination = hit;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryPickWanderDestination(out Vector3 destination)
+    {
+        destination = transform.position;
+
+        int attempts = Mathf.Max(1, sampleAttempts);
+        for (int i = 0; i < attempts; i++)
+        {
+            Vector2 offset = Random.insideUnitCircle * Mathf.Max(1f, wanderRadius);
+            Vector3 candidate = transform.position + new Vector3(offset.x, 0f, offset.y);
+            if (!TrySample(candidate, sampleRadius, out Vector3 hit)) continue;
+
+            destination = hit;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static NPCWaypoint PickWeighted(IReadOnlyList<NPCWaypoint> points)
+    {
+        float total = 0f;
+        for (int i = 0; i < points.Count; i++) total += points[i].Weight;
+
+        if (total <= 0f) return points[Random.Range(0, points.Count)];
+
+        float roll = Random.value * total;
+        for (int i = 0; i < points.Count; i++)
+        {
+            roll -= points[i].Weight;
+            if (roll <= 0f) return points[i];
+        }
+
+        return points[points.Count - 1];
+    }
+
+    private static bool TrySample(Vector3 origin, float radius, out Vector3 result)
+    {
+        if (NavMesh.SamplePosition(origin, out NavMeshHit hit, Mathf.Max(0.5f, radius), NavMesh.AllAreas))
+        {
+            result = hit.position;
+            return true;
+        }
+
+        result = origin;
+        return false;
+    }
+
+    private void StartIdle()
+    {
+        _idle = true;
+        _idleTimer = Random.Range(idleTimeMin, idleTimeMax);
+        if (_agent.hasPath) _agent.ResetPath();
+    }
 
     private bool HasMovingParameter()
     {
@@ -150,231 +213,29 @@ public class NPCBrain : MonoBehaviour
         return false;
     }
 
-    private void SetMoving(bool value)
-    {
-        if (_moving == value) return;
-        ApplyMoving(value);
-    }
-
     private void ApplyMoving(bool value)
     {
+        if (_moving == value) return;
         _moving = value;
         if (!_canAnimate) return;
         animator.SetBool(_movingHash, value);
     }
 
-    private bool MoveToTarget()
+    private void WarnOffNavMesh()
     {
-        Vector3 dir = (_target - transform.position);
-        dir.y = 0f;
-
-        if (dir.sqrMagnitude < 0.0001f) return false;
-
-        dir.Normalize();
-
-        if (!IsOverGround(transform.position + dir * _edgeProbe))
-        {
-            BlockAtEdge();
-            return false;
-        }
-
-        Quaternion targetRot = Quaternion.LookRotation(dir);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotateSpeed * Time.deltaTime);
-
-        Vector3 move = dir * moveSpeed;
-        move.y = _verticalVelocity;
-        _cc.Move(move * Time.deltaTime);
-        return true;
-    }
-
-    private void ApplyGravity()
-    {
-        if (_cc.isGrounded && _verticalVelocity < 0f)
-            _verticalVelocity = -2f;
-        else
-            _verticalVelocity += gravity * Time.deltaTime;
-    }
-
-    // ─── Выбор следующей точки ───────────────────────────────────────────────
-
-    private void PickNextTarget()
-    {
-        _waiting = false;
-        _stuckTimer = 0f;
-        _lastPosition = transform.position;
-
-        if (_currentWaypoint == null) _currentWaypoint = GetNearestWaypoint();
-        if (_currentWaypoint == null)
-        {
-            _ready = false;
-            return;
-        }
-
-        NPCWaypoint next = Random.value < chanceToWanderLocally ? null : _currentWaypoint.GetRandomConnected();
-
-        if (next == null)
-        {
-            TryPickLocalWander();
-            return;
-        }
-
-        // переход к соседнему waypoint (другой остров или просто связанная точка)
-        _currentWaypoint = next;
-        _target = next.transform.position;
-    }
-
-    private void TryPickLocalWander()
-    {
-        // пробуем несколько раз найти точку над землёй
-        for (int attempt = 0; attempt < 8; attempt++)
-        {
-            Vector2 rnd = Random.insideUnitCircle * _currentWaypoint.WanderRadius;
-            Vector3 candidate = _currentWaypoint.transform.position + new Vector3(rnd.x, 0f, rnd.y);
-
-            if (IsOverGround(candidate))
-            {
-                _target = candidate;
-                return;
-            }
-        }
-
-        _target = _currentWaypoint.transform.position;
-    }
-
-    // ─── Антипропасть ────────────────────────────────────────────────────────
-
-    private bool IsOverGround(Vector3 point)
-    {
-        return IsOverGround(point, groundCheckDistance);
-    }
-
-    private bool IsOverGround(Vector3 point, float depth)
-    {
-        float height = Mathf.Max(0.1f, groundProbeHeight);
-        Vector3 rayOrigin = point + Vector3.up * height;
-        float distance = height + Mathf.Max(0.1f, depth);
-
-        if (!Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, distance, _groundLayers, QueryTriggerInteraction.Ignore))
-            return false;
-
-        return hit.collider != _cc;
-    }
-
-    private void BlockAtEdge()
-    {
-        _currentWaypoint = GetNearestWaypoint();
-        StartWaiting();
-    }
-
-    private bool RecoverFromFall()
-    {
-        if (_currentWaypoint == null) return false;
-
-        float limit = _currentWaypoint.transform.position.y - Mathf.Max(1f, fallRecoveryDepth);
-        if (transform.position.y > limit) return false;
-
-        _currentWaypoint = GetNearestWaypoint();
-        Teleport(_currentWaypoint.transform.position);
-        PickNextTarget();
-        return true;
-    }
-
-    private void Teleport(Vector3 position)
-    {
-        bool wasEnabled = _cc.enabled;
-        _cc.enabled = false;
-        transform.position = position;
-        _cc.enabled = wasEnabled;
-
-        _verticalVelocity = 0f;
-        _lastPosition = position;
-        _stuckTimer = 0f;
-    }
-
-    // ─── Застревание ─────────────────────────────────────────────────────────
-
-    private void CheckStuck()
-    {
-        if (HorizontalDistance(transform.position, _lastPosition) > 0.05f)
-        {
-            _lastPosition = transform.position;
-            _stuckTimer = 0f;
-            return;
-        }
-
-        _stuckTimer += Time.deltaTime;
-        if (_stuckTimer >= stuckTimeout)
-        {
-            _stuckTimer = 0f;
-            // сброс к ближайшему waypoint и смена цели
-            _currentWaypoint = GetNearestWaypoint();
-            PickNextTarget();
-        }
-    }
-
-    // ─── Ожидание ────────────────────────────────────────────────────────────
-
-    private void StartWaiting()
-    {
-        _waiting = true;
-        _waitTimer = Random.Range(waitTimeMin, waitTimeMax);
-    }
-
-    // ─── Хелперы ─────────────────────────────────────────────────────────────
-
-    private static NPCWaypoint[] Compact(NPCWaypoint[] source)
-    {
-        if (source == null) return System.Array.Empty<NPCWaypoint>();
-
-        int count = 0;
-        foreach (var wp in source)
-        {
-            if (wp != null) count++;
-        }
-
-        if (count == 0) return System.Array.Empty<NPCWaypoint>();
-
-        var result = new NPCWaypoint[count];
-        int index = 0;
-        foreach (var wp in source)
-        {
-            if (wp != null) result[index++] = wp;
-        }
-
-        return result;
-    }
-
-    private NPCWaypoint GetNearestWaypoint()
-    {
-        NPCWaypoint best = null;
-        float bestDist = float.MaxValue;
-
-        foreach (var wp in _waypoints)
-        {
-            if (wp == null) continue;
-
-            float d = HorizontalDistance(transform.position, wp.transform.position);
-            if (d < bestDist) { bestDist = d; best = wp; }
-        }
-
-        return best;
-    }
-
-    private static float HorizontalDistance(Vector3 a, Vector3 b)
-    {
-        float dx = a.x - b.x;
-        float dz = a.z - b.z;
-        return Mathf.Sqrt(dx * dx + dz * dz);
+        if (_offNavMeshLogged) return;
+        _offNavMeshLogged = true;
+        Debug.LogWarning($"[NPCBrain] {name}: точка появления вне навмеша, персонаж стоит на месте", this);
     }
 
 #if UNITY_EDITOR
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
-        if (!_ready) return;
+        if (_agent == null || !_agent.hasPath) return;
 
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(_target, 0.15f);
-        Gizmos.DrawLine(transform.position, _target);
+        Gizmos.DrawSphere(_agent.destination, 0.15f);
+        Gizmos.DrawLine(transform.position, _agent.destination);
     }
 #endif
 }

@@ -1,31 +1,32 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class CharacterSpawner : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Dormitory dormitory;
     [SerializeField] private Transform spawnPoint;
-    [SerializeField] private Transform waypointsRoot;
     [SerializeField] private CameraController cameraController;
 
     [Header("Camera Focus")]
     [SerializeField] private float focusDuration = 0.6f;
     [SerializeField] private float focusHold = 2f;
 
+    [Header("Navigation")]
+    [SerializeField] private float navMeshSampleRadius = 5f;
+
     [Header("Coloring")]
     [SerializeField] private string colorProperty = "_BaseColor";
 
     private MaterialPropertyBlock _block;
     private int _colorId;
-    private NPCWaypoint[] _waypoints;
     private Coroutine _focusRoutine;
 
     private void Awake()
     {
         _block = new MaterialPropertyBlock();
         _colorId = Shader.PropertyToID(string.IsNullOrEmpty(colorProperty) ? "_BaseColor" : colorProperty);
-        _waypoints = CollectWaypoints();
     }
 
     private void OnEnable()
@@ -43,20 +44,6 @@ public class CharacterSpawner : MonoBehaviour
         if (dormitory == null) return;
 
         foreach (var resident in dormitory.Residents) Spawn(resident);
-    }
-
-    private NPCWaypoint[] CollectWaypoints()
-    {
-        if (waypointsRoot == null) return System.Array.Empty<NPCWaypoint>();
-
-        var found = waypointsRoot.GetComponentsInChildren<NPCWaypoint>(true);
-        if (found == null || found.Length == 0)
-        {
-            Debug.LogWarning($"[CharacterSpawner] {name}: под {waypointsRoot.name} нет waypoints", this);
-            return System.Array.Empty<NPCWaypoint>();
-        }
-
-        return found;
     }
 
     private void OnResidentAdded(Dormitory.Resident resident)
@@ -79,9 +66,6 @@ public class CharacterSpawner : MonoBehaviour
 
         ApplyVariant(instance, data.prefab3D, data.GetVariant(resident.VariantIndex));
 
-        var brain = instance.GetComponentInChildren<NPCBrain>(true);
-        if (brain != null) brain.SetWaypoints(_waypoints);
-
         return instance;
     }
 
@@ -91,19 +75,21 @@ public class CharacterSpawner : MonoBehaviour
         {
             position = spawnPoint.position;
             rotation = spawnPoint.rotation;
-            return;
         }
-
-        if (_waypoints.Length > 0)
+        else if (NPCWaypoint.All.Count > 0)
         {
-            Transform waypoint = _waypoints[Random.Range(0, _waypoints.Length)].transform;
+            Transform waypoint = NPCWaypoint.All[Random.Range(0, NPCWaypoint.All.Count)].transform;
             position = waypoint.position;
             rotation = waypoint.rotation;
-            return;
+        }
+        else
+        {
+            position = transform.position;
+            rotation = transform.rotation;
         }
 
-        position = transform.position;
-        rotation = transform.rotation;
+        float radius = Mathf.Max(0.5f, navMeshSampleRadius);
+        if (NavMesh.SamplePosition(position, out NavMeshHit hit, radius, NavMesh.AllAreas)) position = hit.position;
     }
 
     private void ApplyVariant(GameObject instance, GameObject prefab, CharacterData.ColorVariant variant)

@@ -812,7 +812,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5154928693947714747}
-  - component: {fileID: 1599830107279976040}
+  - component: {fileID: 6218957531554241586}
   - component: {fileID: 2036788319970405548}
   m_Layer: 0
   m_Name: hzcheeto
@@ -837,31 +837,28 @@ Transform:
   - {fileID: 6367627451923778044}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!143 &1599830107279976040
-CharacterController:
+--- !u!195 &6218957531554241586
+NavMeshAgent:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8385452290443078638}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 2.3937664
+  m_AgentTypeID: 0
   m_Radius: 0.2685067
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1.1968832, z: 0}
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2.3937664
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 2
 --- !u!114 &2036788319970405548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -875,24 +872,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 2
-  rotateSpeed: 8
-  gravity: -15
-  stuckTimeout: 3
-  homeWaypoints: []
-  arrivalDistance: 0.4
-  waitTimeMin: 1
-  waitTimeMax: 4
-  chanceToWanderLocally: 0.6
+  angularSpeed: 240
+  acceleration: 8
+  stoppingDistance: 0.4
+  wanderRadius: 12
+  sampleRadius: 2
+  sampleAttempts: 8
+  idleTimeMin: 2
+  idleTimeMax: 6
   animator: {fileID: 0}
   movingParameter: Moving
-  groundCheckDistance: 1.5
-  groundProbeHeight: 0.5
-  edgeProbeDistance: 0.5
-  fallRecoveryDepth: 5
-  spawnGroundSearchDepth: 50
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 0
+  movingSpeedThreshold: 0.1
 --- !u!1 &8485865247342113241
 GameObject:
   m_ObjectHideFlags: 0
