@@ -18,11 +18,17 @@ public class NPCBrain : MonoBehaviour
     [SerializeField] private float waitTimeMax = 4f;
     [SerializeField][Range(0f, 1f)] private float chanceToWanderLocally = 0.6f; // vs перейти к другому waypoint
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private string movingParameter = "Moving";
+
     [Header("Ground Check")]
     [SerializeField] private float groundCheckDistance = 1.5f;   // raycast вниз с целевой точки
     [SerializeField] private LayerMask groundMask;
 
     private CharacterController _cc;
+    private int _movingHash;
+    private bool _moving;
     private Vector3 _target;
     private float _verticalVelocity;
     private float _waitTimer;
@@ -35,6 +41,8 @@ public class NPCBrain : MonoBehaviour
     private void Awake()
     {
         _cc = GetComponent<CharacterController>();
+        if (animator == null) animator = GetComponentInChildren<Animator>(true);
+        if (!string.IsNullOrEmpty(movingParameter)) _movingHash = Animator.StringToHash(movingParameter);
     }
 
     private void Start()
@@ -58,12 +66,14 @@ public class NPCBrain : MonoBehaviour
         if (_waiting)
         {
             _waitTimer -= Time.deltaTime;
+            SetMoving(false);
             if (_waitTimer <= 0f) PickNextTarget();
             return;
         }
 
         MoveToTarget();
         CheckStuck();
+        SetMoving(true);
 
         float distXZ = HorizontalDistance(transform.position, _target);
         if (distXZ <= arrivalDistance)
@@ -71,6 +81,14 @@ public class NPCBrain : MonoBehaviour
     }
 
     // ─── Движение ────────────────────────────────────────────────────────────
+
+    private void SetMoving(bool value)
+    {
+        if (animator == null || _movingHash == 0) return;
+        if (_moving == value) return;
+        _moving = value;
+        animator.SetBool(_movingHash, value);
+    }
 
     private void MoveToTarget()
     {

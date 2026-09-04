@@ -18,6 +18,10 @@ MonoBehaviour:
   levelPriceStep: 5000
   maxLevel: 60
   characters:
-  - {fileID: 11400000, guid: e5ccbfe2e9c45324eba8da217cfd2e8d, type: 2}
+  - {fileID: 11400000, guid: 732c1fd5382b6b9429f8cbe98aa11658, type: 2}
+  - {fileID: 11400000, guid: 5ed406be383026f4d8f017b5d9f05428, type: 2}
+  - {fileID: 11400000, guid: cca14f289d8ffd44fb8bce8c0e11da29, type: 2}
+  - {fileID: 11400000, guid: c803b237f040365448c767f4bfbf080d, type: 2}
+  - {fileID: 11400000, guid: 2c0e0d9701df3b341b504f06452e3c35, type: 2}
   baseCharacterPrice: 10000
   characterPriceStep: 10000
