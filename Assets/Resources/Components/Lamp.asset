@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 6
   icon: {fileID: 21300000, guid: 92b5d7c083d8ba64d8b6c277b14eecf5, type: 3}
-  description: 
+  description: "Крутая лампочка. Побольше бы таких."
   craftDuration: 600
+  rarity: 1
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 1500

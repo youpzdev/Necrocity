@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 3
   icon: {fileID: 21300000, guid: 354f28a08897be7478498dd2c5319c18, type: 3}
-  description: 
+  description: "Вырастет то, чего ты больше захочешь."
   craftDuration: 300
+  rarity: 0
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 500

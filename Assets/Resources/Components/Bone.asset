@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 2
   icon: {fileID: 21300000, guid: f099c63a940f8f846b458129346f735b, type: 3}
-  description: 
+  description: "Скелеты сказали, что он был не очень хорошим человеком."
   craftDuration: 300
+  rarity: 0
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 500

@@ -15,4 +15,10 @@ MonoBehaviour:
   type: 13
   icon: {fileID: 0}
   description: 
-  recipe: []
+  recipe:
+  - component: 7
+    amount: 2
+  - component: 1
+    amount: 3
+  - component: 8
+    amount: 2

@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 9
   icon: {fileID: 21300000, guid: 3411a00ef99ceb64bbfa2e8b4ac7f00a, type: 3}
-  description: 
+  description: "Боитесь щекотки? Не снимайте нитку."
   craftDuration: 600
+  rarity: 1
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 1500

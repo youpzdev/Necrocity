@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 4
   icon: {fileID: 21300000, guid: 9462513e35ad7fd4c86d16374717b9ff, type: 3}
-  description: 
+  description: "Работает, как батарейка."
   craftDuration: 600
+  rarity: 1
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 1500

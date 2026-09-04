@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 1
   icon: {fileID: 21300000, guid: 5c54dbdd97432d8449cda0824fbbb494, type: 3}
-  description: 
+  description: "Если прислушаться - шепчет что то глупое."
   craftDuration: 300
+  rarity: 0
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 500

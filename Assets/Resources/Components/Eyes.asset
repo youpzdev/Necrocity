@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 8
   icon: {fileID: 21300000, guid: fa420461128e80f4bb9f1c09f4fb91f7, type: 3}
-  description: 
+  description: "Достаточно внимательные."
   craftDuration: 600
+  rarity: 1
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 1500

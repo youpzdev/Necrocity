@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 7
   icon: {fileID: 21300000, guid: 08d403318c3b7df46a102ecc9c618cc3, type: 3}
-  description: 
+  description: "Говорят, что это слезы древних демонов."
   craftDuration: 600
+  rarity: 1
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 1500

@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 5
   icon: {fileID: 21300000, guid: 1608755efab9da940862c1a6456227f7, type: 3}
-  description: 
+  description: "Зомби говорят, что попали сюда из за него."
   craftDuration: 600
+  rarity: 1
   SellPrice:
     resourceType: 0
-    amount: 0
+    amount: 1500
