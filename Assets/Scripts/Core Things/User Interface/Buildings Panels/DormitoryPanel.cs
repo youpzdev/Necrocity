@@ -81,6 +81,7 @@ public class DormitoryPanel : MonoBehaviour
     {
         EventBus<DormitoryChangedEvent>.Subscribe(OnDormitoryChanged, this);
         EventBus<ResourceManagerChangedEvent>.Subscribe(OnResourcesChanged, this);
+        SubscribeDormitory();
         Rebuild();
     }
 
@@ -88,12 +89,17 @@ public class DormitoryPanel : MonoBehaviour
     {
         EventBus<DormitoryChangedEvent>.Unsubscribe(OnDormitoryChanged);
         EventBus<ResourceManagerChangedEvent>.Unsubscribe(OnResourcesChanged);
+        UnsubscribeDormitory();
     }
 
     public void Show(Dormitory dormitory)
     {
+        UnsubscribeDormitory();
+
         _dormitory = dormitory;
         _selectedIndex = -1;
+
+        SubscribeDormitory();
 
         HideMessage();
         if (uiPanel != null) uiPanel.Show();
@@ -102,6 +108,8 @@ public class DormitoryPanel : MonoBehaviour
 
     public void Hide()
     {
+        UnsubscribeDormitory();
+
         if (uiPanel != null) uiPanel.Hide();
 
         ClearPreview();
@@ -113,6 +121,23 @@ public class DormitoryPanel : MonoBehaviour
     private void OnDormitoryChanged(DormitoryChangedEvent _) => Refresh();
 
     private void OnResourcesChanged(ResourceManagerChangedEvent _) => Refresh();
+
+    private void OnModuleRevealed() => Hide();
+
+    private void SubscribeDormitory()
+    {
+        if (_dormitory == null) return;
+
+        _dormitory.ModuleRevealed -= OnModuleRevealed;
+        _dormitory.ModuleRevealed += OnModuleRevealed;
+    }
+
+    private void UnsubscribeDormitory()
+    {
+        if (_dormitory == null) return;
+
+        _dormitory.ModuleRevealed -= OnModuleRevealed;
+    }
 
     private void Rebuild()
     {

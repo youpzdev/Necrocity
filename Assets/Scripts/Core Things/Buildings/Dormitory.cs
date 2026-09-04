@@ -22,10 +22,16 @@ public class Dormitory : MonoBehaviour, IClickableBuilding
 
     [SerializeField] private DormitoryConfig config;
 
+    [Header("Modules")]
+    [SerializeField] private ModularBuilding modularBuilding;
+    [SerializeField] private CameraController cameraController;
+    [SerializeField] private ParticleSystem moduleRevealVfx;
+
     private int _level = 1;
     private readonly List<Resident> _residents = new();
 
     public event Action<Resident> ResidentAdded;
+    public event Action ModuleRevealed;
 
     public int Level => _level;
     public int ResidentCount => _residents.Count;
@@ -38,6 +44,21 @@ public class Dormitory : MonoBehaviour, IClickableBuilding
     private void Awake()
     {
         Load();
+
+        if (modularBuilding == null) modularBuilding = GetComponent<ModularBuilding>();
+        if (cameraController == null) cameraController = FindFirstObjectByType<CameraController>();
+
+        if (modularBuilding != null) modularBuilding.ModuleRevealed += OnModuleRevealed;
+    }
+
+    private void Start()
+    {
+        if (modularBuilding != null) modularBuilding.ApplyLevel(_level);
+    }
+
+    private void OnDestroy()
+    {
+        if (modularBuilding != null) modularBuilding.ModuleRevealed -= OnModuleRevealed;
     }
 
     public bool TryUpgrade()
@@ -51,6 +72,8 @@ public class Dormitory : MonoBehaviour, IClickableBuilding
         _level++;
         SaveData();
         EventBus<DormitoryChangedEvent>.Raise(new DormitoryChangedEvent());
+
+        if (modularBuilding != null) modularBuilding.SetLevel(_level);
         return true;
     }
 
@@ -105,6 +128,14 @@ public class Dormitory : MonoBehaviour, IClickableBuilding
     public void OnClick()
     {
         UIManager.Instance.ShowDormitoryPanel(this);
+    }
+
+    private void OnModuleRevealed(int moduleIndex)
+    {
+        ModuleRevealed?.Invoke();
+
+        if (moduleRevealVfx != null) moduleRevealVfx.Play();
+        if (cameraController != null) cameraController.FocusOn(transform, modularBuilding.RevealDuration);
     }
 
     private void SaveData()
