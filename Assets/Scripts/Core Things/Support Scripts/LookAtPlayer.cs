@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class LookAtPlayer : MonoBehaviour
 {
+    private const float ViewportMargin = 0.1f;
+
     private Camera targetCamera;
 
     void Awake()
@@ -12,9 +14,17 @@ public class LookAtPlayer : MonoBehaviour
     void LateUpdate()
     {
         if (!targetCamera) return;
+        if (!IsOnScreen()) return;
 
-        Vector3 direction = targetCamera.transform.position - transform.position;
+        transform.rotation = Quaternion.LookRotation(transform.position - targetCamera.transform.position);
+    }
 
-        transform.rotation = Quaternion.LookRotation(-direction);
+    private bool IsOnScreen()
+    {
+        Vector3 viewportPoint = targetCamera.WorldToViewportPoint(transform.position);
+        if (viewportPoint.z <= 0f) return false;
+
+        return viewportPoint.x >= -ViewportMargin && viewportPoint.x <= 1f + ViewportMargin
+            && viewportPoint.y >= -ViewportMargin && viewportPoint.y <= 1f + ViewportMargin;
     }
 }

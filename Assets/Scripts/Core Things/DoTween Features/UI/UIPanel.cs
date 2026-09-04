@@ -29,13 +29,10 @@ public class UIPanel : MonoBehaviour
     private Action _showAction;
     private Action _hideAction;
 
-    private static readonly Stack<UIPanel> _panelStack = new Stack<UIPanel>();
+    private static readonly List<UIPanel> _panelStack = new List<UIPanel>();
     private static readonly HashSet<UIPanel> _panelSet = new HashSet<UIPanel>();
 
-    private static UIPanel _backListenerRegistered;
-
-    // -------------------------------------------------------
-    #region Unity Lifecycle
+    private static bool _backListenerRegistered;
 
     private void Awake()
     {
@@ -47,15 +44,7 @@ public class UIPanel : MonoBehaviour
         InitActions();
     }
 
-    private void OnEnable() => Application.onBeforeRender += HandleBackInput;
-
-    private void OnDisable() => Application.onBeforeRender -= HandleBackInput;
-
     private void OnDestroy() => RemoveFromStack();
-
-    #endregion
-    // -------------------------------------------------------
-    #region Init
 
     private void InitSlideOffset()
     {
@@ -110,41 +99,40 @@ public class UIPanel : MonoBehaviour
         }
     }
 
-    #endregion
-    // -------------------------------------------------------
-    #region Back Input (static, один обработчик на всё а то вонючка будет)
-
     private static void HandleBackInput()
     {
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
-        if (_panelStack.Count > 0) _panelStack.Peek()._onBackPressed?.Invoke();
+        if (_panelStack.Count > 0) _panelStack[_panelStack.Count - 1]._onBackPressed?.Invoke();
     }
 
-    #endregion
-    // -------------------------------------------------------
-    #region Stack Management
+    private static void RegisterBackListener()
+    {
+        if (_backListenerRegistered) return;
+        _backListenerRegistered = true;
+        Application.onBeforeRender += HandleBackInput;
+    }
+
+    private static void ReleaseBackListener()
+    {
+        if (!_backListenerRegistered) return;
+        _backListenerRegistered = false;
+        Application.onBeforeRender -= HandleBackInput;
+    }
 
     private void PushToStack()
     {
         if (!_panelSet.Add(this)) return;
-        _panelStack.Push(this);
+        _panelStack.Add(this);
+        RegisterBackListener();
     }
 
     private void RemoveFromStack()
     {
         if (!_panelSet.Remove(this)) return;
 
-        var temp = new List<UIPanel>(_panelStack);
-        _panelStack.Clear();
-        for (int i = temp.Count - 1; i >= 0; i--)
-        {
-            if (temp[i] != this) _panelStack.Push(temp[i]);
-        }
+        _panelStack.Remove(this);
+        if (_panelStack.Count == 0) ReleaseBackListener();
     }
-
-    #endregion
-    // -------------------------------------------------------
-    #region Show / Hide
 
     public void Show()
     {
@@ -173,10 +161,6 @@ public class UIPanel : MonoBehaviour
         RemoveFromStack();
         _hideAction?.Invoke();
     }
-
-    #endregion
-    // -------------------------------------------------------
-    #region Animations
 
     private void PlayFadeOnlyShow()
     {
@@ -324,10 +308,6 @@ public class UIPanel : MonoBehaviour
         _content.DOLocalRotate(new Vector3(0f, 0f, 25f), _duration * 0.7f).SetEase(Ease.InCubic).SetUpdate(true).SetId(this).OnComplete(Deactivate);
     }
 
-    #endregion
-    // -------------------------------------------------------
-    #region Helpers
-
     private void EnableInteraction()
     {
         _canvasGroup.interactable = true;
@@ -336,5 +316,4 @@ public class UIPanel : MonoBehaviour
 
     private void Deactivate() => gameObject.SetActive(false);
 
-    #endregion
 }

@@ -6,9 +6,18 @@ public class ResidentCounter : MonoBehaviour
     [SerializeField] private TMP_Text counterText;
     [SerializeField] private Dormitory dormitory;
 
-    private void Start()
+    private void OnEnable()
     {
         EventBus<DormitoryChangedEvent>.Subscribe(OnChanged, this);
+    }
+
+    private void OnDisable()
+    {
+        EventBus<DormitoryChangedEvent>.Unsubscribe(OnChanged);
+    }
+
+    private void Start()
+    {
         UpdateText();
     }
 

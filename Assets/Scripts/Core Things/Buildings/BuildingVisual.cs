@@ -9,9 +9,18 @@ public class BuildingVisual : MonoBehaviour
     [Space(15)]
     [SerializeField] private LevelObjects[] levelChanges;
 
-    private void Start()
+    private void OnEnable()
     {
         EventBus<LevelChangedEvent>.Subscribe(OnLevelChanged, this);
+    }
+
+    private void OnDisable()
+    {
+        EventBus<LevelChangedEvent>.Unsubscribe(OnLevelChanged);
+    }
+
+    private void Start()
+    {
         UpdateVisual();
     }
 

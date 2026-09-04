@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [DefaultExecutionOrder(150)]
 public class CameraController : MonoBehaviour
@@ -73,8 +74,8 @@ public class CameraController : MonoBehaviour
         InputManager.Instance.OnPan += HandlePan;
         InputManager.Instance.OnScroll += HandleScroll;
         InputManager.Instance.OnPinch += HandlePinch;
-        InputManager.Instance.OnRotateChanged += v => _rotateHeld = v;
-        InputManager.Instance.OnMiddleMouseChanged += v => _middleHeld = v;
+        InputManager.Instance.OnRotateChanged += HandleRotateChanged;
+        InputManager.Instance.OnMiddleMouseChanged += HandleMiddleMouseChanged;
     }
 
     void OnDisable()
@@ -84,9 +85,13 @@ public class CameraController : MonoBehaviour
         InputManager.Instance.OnPan -= HandlePan;
         InputManager.Instance.OnScroll -= HandleScroll;
         InputManager.Instance.OnPinch -= HandlePinch;
-        InputManager.Instance.OnRotateChanged -= v => _rotateHeld = v;
-        InputManager.Instance.OnMiddleMouseChanged -= v => _middleHeld = v;
+        InputManager.Instance.OnRotateChanged -= HandleRotateChanged;
+        InputManager.Instance.OnMiddleMouseChanged -= HandleMiddleMouseChanged;
     }
+
+    private void HandleRotateChanged(bool held) => _rotateHeld = held;
+
+    private void HandleMiddleMouseChanged(bool held) => _middleHeld = held;
 
     private void HandleLook(Vector2 delta)
     {
@@ -94,7 +99,7 @@ public class CameraController : MonoBehaviour
 
         if (_middleHeld)
             _panDelta += delta * panSensitivity;
-        else if (_rotateHeld || IsTouchSingleFinger())
+        else if (_rotateHeld || IsSingleFingerTouching())
             _rotateDelta += delta * rotateSensitivity;
     }
 
@@ -124,6 +129,12 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+        if (_pinchActive && PressedTouchCount() < 2)
+        {
+            _pinchActive = false;
+            _prevPinchDist = 0f;
+        }
+
         if (_rotateDelta != Vector2.zero)
         {
             yaw += _rotateDelta.x;
@@ -186,6 +197,20 @@ public class CameraController : MonoBehaviour
         _verticalOffset = pos.y - baseTarget.position.y;
     }
 
-    private static bool IsBlocked() => UIManager.Instance.AreModalWindowOpened();
-    private static bool IsTouchSingleFinger() => UnityEngine.InputSystem.Touchscreen.current != null;
+    private static bool IsBlocked() => UIManager.Instance != null && UIManager.Instance.AreModalWindowOpened();
+
+    private static int PressedTouchCount()
+    {
+        var touchscreen = Touchscreen.current;
+        if (touchscreen == null) return 0;
+
+        int count = 0;
+        foreach (var touch in touchscreen.touches)
+        {
+            if (touch.press.isPressed) count++;
+        }
+        return count;
+    }
+
+    private static bool IsSingleFingerTouching() => PressedTouchCount() == 1;
 }

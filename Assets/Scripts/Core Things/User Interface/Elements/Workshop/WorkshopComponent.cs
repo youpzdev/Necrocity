@@ -22,7 +22,11 @@ public class WorkshopComponent : MonoBehaviour
 
         if (imageIcon) imageIcon.sprite = icon;
         if (titleText) titleText.text = title;
-        if (button && clickAction != null) button.onClick.AddListener(clickAction);
+        if (button)
+        {
+            button.onClick.RemoveAllListeners();
+            if (clickAction != null) button.onClick.AddListener(clickAction);
+        }
 
         if (amount >= 0)
         {

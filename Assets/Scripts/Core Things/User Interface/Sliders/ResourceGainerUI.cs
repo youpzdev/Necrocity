@@ -18,10 +18,19 @@ public class ResourceGainerUI : MonoBehaviour
         resourceGainer = GetComponentInParent<ResourceGainer>();
     }
 
+    void OnEnable()
+    {
+        EventBus<ResourcesChangedEvent>.Subscribe(OnResourcesChanged, this);
+    }
+
+    void OnDisable()
+    {
+        EventBus<ResourcesChangedEvent>.Unsubscribe(OnResourcesChanged);
+    }
+
     void Start()
     {
         if (gainButton) gainButton.onClick.AddListener(resourceGainer.Redeem);
-        EventBus<ResourcesChangedEvent>.Subscribe(OnResourcesChanged, this);
         UpdateUI();
     }
 

@@ -4,7 +4,8 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    public static UIManager Instance;
+    public static UIManager Instance { get; private set; }
+
     [Header("References")]
     [SerializeField] private IconsConfig resourceIcons;
     [SerializeField] private BuildingInfoPanel buildingInfo;
@@ -19,12 +20,23 @@ public class UIManager : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
-    void Start()
+    void OnEnable()
     {
         EventBus<ResourceManagerChangedEvent>.Subscribe(OnResourcesChanged, this);
+    }
+
+    void OnDisable()
+    {
+        EventBus<ResourceManagerChangedEvent>.Unsubscribe(OnResourcesChanged);
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     void UpdateResourcesText()
@@ -39,7 +51,7 @@ public class UIManager : MonoBehaviour
     }
 
 
-    // ========= публичная нечисть ========= 
+    // публичная нечисть
 
     public bool AreModalWindowOpened()
     {
