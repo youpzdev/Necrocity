@@ -14,6 +14,8 @@ public static class GameSave
         public const string Components = "components";
         public const string Items = "items";
         public const string TimeOfDay = "timeOfDay";
+        public const string DormitoryLevel = "dormitory.level";
+        public const string DormitoryResidents = "dormitory.residents";
 
         public static string Gainer(string id) => "gainer." + id;
     }

@@ -12,8 +12,21 @@ public class DormitoryConfig : ScriptableObject
 
     [Header("Characters")]
     public CharacterData[] characters;
+    public int baseCharacterPrice = 10000;
+    public int characterPriceStep = 10000;
+
+    public int CharacterCount => characters != null ? characters.Length : 0;
 
     public int GetUpgradePrice(int currentLevel) => baseLevelPrice + levelPriceStep * (currentLevel - 1);
     public int GetCapacity(int level) => initialCapacity + capacityPerLevel * (level - 1);
 
+    public int GetCharacterPrice(int purchasedCount)
+    {
+        if (purchasedCount < 0) purchasedCount = 0;
+        return baseCharacterPrice + characterPriceStep * purchasedCount;
+    }
+
+    public bool HasCharacter(int index) => index >= 0 && index < CharacterCount && characters[index] != null;
+
+    public CharacterData GetCharacter(int index) => HasCharacter(index) ? characters[index] : null;
 }

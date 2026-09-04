@@ -1,31 +1,48 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum CharacterPurchaseResult
+{
+    Success,
+    NoConfig,
+    UnknownCharacter,
+    NoFreeSpace,
+    NotEnoughDublons
+}
+
 public class Dormitory : MonoBehaviour, IClickableBuilding
 {
-    private const string KeyLevel = "dormitory_level";
-    private const string KeyResidents = "dormitory_residents";
+    [Serializable]
+    public class Resident
+    {
+        public int CharacterIndex;
+        public int VariantIndex = -1;
+    }
 
     [SerializeField] private DormitoryConfig config;
 
     private int _level = 1;
-    private List<int> _residentIndices = new();  // индексы купленных CharacterData
+    private readonly List<Resident> _residents = new();
+
+    public event Action<Resident> ResidentAdded;
 
     public int Level => _level;
-    public int ResidentCount => _residentIndices.Count;
-    public int Capacity => config.GetCapacity(_level);
+    public int ResidentCount => _residents.Count;
+    public int Capacity => config != null ? config.GetCapacity(_level) : 0;
     public bool IsFull => ResidentCount >= Capacity;
     public DormitoryConfig Config => config;
+    public IReadOnlyList<Resident> Residents => _residents;
+    public int NextCharacterPrice => config != null ? config.GetCharacterPrice(ResidentCount) : 0;
 
     private void Awake()
     {
         Load();
     }
 
-    // ─── Публичное ───────────────────────────────────────────────────────────
-
     public bool TryUpgrade()
     {
+        if (config == null) return false;
         if (_level >= config.maxLevel) return false;
 
         int price = config.GetUpgradePrice(_level);
@@ -34,20 +51,33 @@ public class Dormitory : MonoBehaviour, IClickableBuilding
         _level++;
         SaveData();
         EventBus<DormitoryChangedEvent>.Raise(new DormitoryChangedEvent());
-        EventBus<LevelChangedEvent>.Raise(new LevelChangedEvent { Gainer = null });
         return true;
     }
 
-    public bool TryPurchaseCharacter(int characterIndex)
+    public CharacterPurchaseResult TryPurchaseCharacter(int characterIndex, out Resident resident)
     {
-        if (IsFull) return false;
-        if (_residentIndices.Contains(characterIndex)) return false;
+        resident = null;
 
-        CharacterData data = config.characters[characterIndex];
-        if (!ResourceManager.Instance.SpendResource(ResourceType.Dublons, data.price)) return false;
+        if (config == null) return CharacterPurchaseResult.NoConfig;
 
-        _residentIndices.Add(characterIndex);
+        CharacterData data = config.GetCharacter(characterIndex);
+        if (data == null) return CharacterPurchaseResult.UnknownCharacter;
+
+        if (IsFull) return CharacterPurchaseResult.NoFreeSpace;
+
+        int price = config.GetCharacterPrice(ResidentCount);
+        if (!ResourceManager.Instance.SpendResource(ResourceType.Dublons, price))
+            return CharacterPurchaseResult.NotEnoughDublons;
+
+        resident = new Resident
+        {
+            CharacterIndex = characterIndex,
+            VariantIndex = data.PickRandomVariantIndex()
+        };
+        _residents.Add(resident);
         SaveData();
+
+        ResidentAdded?.Invoke(resident);
 
         EventBus<CharacterPurchasedEvent>.Raise(new CharacterPurchasedEvent
         {
@@ -56,44 +86,48 @@ public class Dormitory : MonoBehaviour, IClickableBuilding
             Capacity = Capacity
         });
         EventBus<DormitoryChangedEvent>.Raise(new DormitoryChangedEvent());
-        return true;
+
+        return CharacterPurchaseResult.Success;
     }
 
-    public bool IsCharacterOwned(int characterIndex) => _residentIndices.Contains(characterIndex);
-
-    public int GetCharacterPrice(int index)
+    public int GetOwnedCount(int characterIndex)
     {
-        if (index == 0) return config.characters[0].price;
-        // каждый следующий на 10к дороже предыдущего
-        return config.characters[0].price + 10000 * index;
+        int count = 0;
+        foreach (var resident in _residents)
+        {
+            if (resident.CharacterIndex == characterIndex) count++;
+        }
+        return count;
     }
+
+    public CharacterData GetCharacterData(int index) => config != null ? config.GetCharacter(index) : null;
 
     public void OnClick()
     {
         UIManager.Instance.ShowDormitoryPanel(this);
     }
 
-    // ─── Save / Load ──────────────────────────────────────────────────────────
-
     private void SaveData()
     {
-        Save.Set(KeyLevel, _level);
-        Save.Set(KeyResidents, string.Join(",", _residentIndices));
+        GameSave.Set(GameSave.Keys.DormitoryLevel, _level);
+        GameSave.Set(GameSave.Keys.DormitoryResidents, _residents);
     }
 
     private void Load()
     {
-        _level = Save.Get(KeyLevel, 1);
+        _level = Mathf.Max(1, GameSave.Get(GameSave.Keys.DormitoryLevel, 1));
+        if (config != null) _level = Mathf.Min(_level, Mathf.Max(1, config.maxLevel));
 
-        string raw = Save.Get(KeyResidents, "");
-        _residentIndices.Clear();
-        if (!string.IsNullOrEmpty(raw))
+        _residents.Clear();
+
+        var stored = GameSave.Get<List<Resident>>(GameSave.Keys.DormitoryResidents, null);
+        if (stored == null) return;
+
+        foreach (var resident in stored)
         {
-            foreach (var part in raw.Split(','))
-            {
-                if (int.TryParse(part, out int idx))
-                    _residentIndices.Add(idx);
-            }
+            if (resident == null) continue;
+            if (config != null && !config.HasCharacter(resident.CharacterIndex)) continue;
+            _residents.Add(resident);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +17,12 @@ public class DormitoryPanel : MonoBehaviour
     [Header("Residents Tab")]
     [SerializeField] private Transform characterGrid;
     [SerializeField] private GameObject characterSlotPrefab;
+    [SerializeField] private GameObject residentsEmptyState;
+
+    [Header("Preview")]
+    [SerializeField] private Transform previewRoot;
+    [SerializeField] private GameObject previewPlaceholder;
+    [SerializeField] private TMP_Text previewNameText;
 
     [Header("Upgrade Tab")]
     [SerializeField] private TMP_Text levelText;
@@ -24,7 +31,19 @@ public class DormitoryPanel : MonoBehaviour
     [SerializeField] private Button doUpgradeButton;
     [SerializeField] private TMP_Text doUpgradeButtonText;
 
+    [Header("Messages")]
+    [SerializeField] private GameObject messageRoot;
+    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private float messageDuration = 2.5f;
+    [SerializeField] private string noConfigMessage = "Жители пока не настроены";
+    [SerializeField] private string unknownCharacterMessage = "Такого жителя нет в списке";
+    [SerializeField] private string noFreeSpaceMessage = "Свободных мест нет, улучшите общежитие";
+    [SerializeField] private string notEnoughDublonsMessage = "Не хватает дублонов";
+
     private Dormitory _dormitory;
+    private GameObject _previewInstance;
+    private int _selectedIndex = -1;
+    private Coroutine _messageRoutine;
 
     private void Awake()
     {
@@ -37,16 +56,18 @@ public class DormitoryPanel : MonoBehaviour
     {
         _dormitory = dormitory;
         uiPanel.Show();
+        HideMessage();
         OpenTab(true);
     }
 
     public void Hide()
     {
         uiPanel.Hide();
+        ClearPreview();
+        HideMessage();
+        _selectedIndex = -1;
         _dormitory = null;
     }
-
-    // ─── Вкладки ─────────────────────────────────────────────────────────────
 
     private void OpenTab(bool isResidents)
     {
@@ -59,38 +80,147 @@ public class DormitoryPanel : MonoBehaviour
         else RefreshUpgradeTab();
     }
 
-    // ─── Вкладка Жители ──────────────────────────────────────────────────────
-
     private void RefreshResidentsTab()
     {
         foreach (Transform old in characterGrid) Pooling.Destroy(old.gameObject);
 
-        var chars = _dormitory.Config.characters;
-        for (int i = 0; i < chars.Length; i++)
+        DormitoryConfig config = _dormitory != null ? _dormitory.Config : null;
+        int count = config != null ? config.CharacterCount : 0;
+
+        if (residentsEmptyState != null) residentsEmptyState.SetActive(count == 0);
+
+        if (count == 0)
         {
+            ClearPreview();
+            return;
+        }
+
+        int price = _dormitory.NextCharacterPrice;
+        bool full = _dormitory.IsFull;
+        int firstAvailable = -1;
+
+        for (int i = 0; i < count; i++)
+        {
+            CharacterData data = config.GetCharacter(i);
+            if (data == null) continue;
+
+            if (firstAvailable < 0) firstAvailable = i;
+
             int index = i;
             var slot = Pooling.Instantiate(characterSlotPrefab, characterGrid)
                               .GetComponent<CharacterSlot>();
 
-            bool owned = _dormitory.IsCharacterOwned(index);
-            int price = _dormitory.GetCharacterPrice(index);
-            slot.Init(chars[index], price, owned, _dormitory.IsFull, () => OnCharacterClick(index));
+            slot.Init(data, price, _dormitory.GetOwnedCount(index), full,
+                      () => OnCharacterBuy(index), () => ShowPreview(index));
         }
+
+        int preview = config.GetCharacter(_selectedIndex) != null ? _selectedIndex : firstAvailable;
+        if (preview >= 0) ShowPreview(preview);
+        else ClearPreview();
     }
 
-    private void OnCharacterClick(int index)
+    private void OnCharacterBuy(int index)
     {
-        bool success = _dormitory.TryPurchaseCharacter(index);
-        if (success) RefreshResidentsTab();
+        CharacterPurchaseResult result = _dormitory.TryPurchaseCharacter(index, out _);
+
+        if (result == CharacterPurchaseResult.Success)
+        {
+            Hide();
+            return;
+        }
+
+        ShowMessage(GetMessage(result));
+        RefreshResidentsTab();
     }
 
-    // ─── Вкладка Улучшение ───────────────────────────────────────────────────
+    private string GetMessage(CharacterPurchaseResult result) => result switch
+    {
+        CharacterPurchaseResult.NoConfig => noConfigMessage,
+        CharacterPurchaseResult.UnknownCharacter => unknownCharacterMessage,
+        CharacterPurchaseResult.NoFreeSpace => noFreeSpaceMessage,
+        _ => notEnoughDublonsMessage
+    };
+
+    private void ShowMessage(string text)
+    {
+        if (messageText == null) return;
+
+        messageText.text = text;
+        if (messageRoot != null) messageRoot.SetActive(true);
+
+        if (_messageRoutine != null) StopCoroutine(_messageRoutine);
+        _messageRoutine = StartCoroutine(HideMessageAfterDelay());
+    }
+
+    private IEnumerator HideMessageAfterDelay()
+    {
+        yield return new WaitForSeconds(messageDuration);
+        _messageRoutine = null;
+        HideMessage();
+    }
+
+    private void HideMessage()
+    {
+        if (_messageRoutine != null)
+        {
+            StopCoroutine(_messageRoutine);
+            _messageRoutine = null;
+        }
+
+        if (messageText != null) messageText.text = "";
+        if (messageRoot != null) messageRoot.SetActive(false);
+    }
+
+    private void ShowPreview(int index)
+    {
+        ClearPreview();
+
+        CharacterData data = _dormitory != null ? _dormitory.GetCharacterData(index) : null;
+        if (data == null) return;
+
+        _selectedIndex = index;
+
+        if (previewNameText != null) previewNameText.text = data.characterName;
+
+        bool hasModel = previewRoot != null && data.prefab3D != null;
+        if (hasModel)
+        {
+            _previewInstance = Instantiate(data.prefab3D, previewRoot);
+            _previewInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+            var brain = _previewInstance.GetComponentInChildren<NPCBrain>(true);
+            if (brain != null) brain.enabled = false;
+        }
+
+        if (previewPlaceholder != null) previewPlaceholder.SetActive(!hasModel);
+    }
+
+    private void ClearPreview()
+    {
+        if (_previewInstance != null)
+        {
+            Destroy(_previewInstance);
+            _previewInstance = null;
+        }
+
+        if (previewNameText != null) previewNameText.text = "";
+        if (previewPlaceholder != null) previewPlaceholder.SetActive(true);
+    }
 
     private void RefreshUpgradeTab()
     {
+        DormitoryConfig config = _dormitory != null ? _dormitory.Config : null;
+        if (config == null)
+        {
+            doUpgradeButton.interactable = false;
+            doUpgradeButtonText.text = noConfigMessage;
+            upgradePriceText.text = "";
+            return;
+        }
+
         int level = _dormitory.Level;
         int capacity = _dormitory.Capacity;
-        bool maxed = level >= _dormitory.Config.maxLevel;
+        bool maxed = level >= config.maxLevel;
 
         levelText.text = $"Уровень {level}";
         capacityText.text = $"{_dormitory.ResidentCount} / {capacity}";
@@ -103,7 +233,7 @@ public class DormitoryPanel : MonoBehaviour
             return;
         }
 
-        int price = _dormitory.Config.GetUpgradePrice(level);
+        int price = config.GetUpgradePrice(level);
         bool canAfford = ResourceManager.Instance.CanSpendResource(ResourceType.Dublons, price);
 
         upgradePriceText.text = $"{price} дублонов";
