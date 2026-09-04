@@ -138,7 +138,6 @@ public class NPCBrain : MonoBehaviour
             }
         }
 
-        // не нашли — идём прямо к waypoint
         _target = _currentWaypoint.transform.position;
     }
 

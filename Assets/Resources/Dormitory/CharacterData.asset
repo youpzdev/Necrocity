@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8efadfcf9714af44bf20caaa75b8498, type: 3}
   m_Name: CharacterData
   m_EditorClassIdentifier: 
-  characterName: Nigger
+  characterName: Zombie
   icon: {fileID: 21300000, guid: e617061350fd1b346864dd73da1a4b64, type: 3}
   prefab3D: {fileID: 0}
   price: 10
