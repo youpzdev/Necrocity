@@ -24,9 +24,7 @@ public class LabTab : BaseComponentTab
 
         Subscribe();
 
-        if (CraftingQueue.Instance != null &&
-            (CraftingQueue.Instance.IsActive || CraftingQueue.Instance.IsReadyToCollect))
-            RestoreActiveState();
+        RestoreActiveState();
 
         RefreshCraftUI();
     }
@@ -81,7 +79,8 @@ public class LabTab : BaseComponentTab
 
     protected override void OnComponentClick(ComponentData data)
     {
-        if (CraftingQueue.Instance.IsActive) return;
+        var q = CraftingQueue.Instance;
+        if (q != null && (q.IsActive || q.CanRedeem)) return;
 
         base.OnComponentClick(data);
         _selected = data;
@@ -104,7 +103,11 @@ public class LabTab : BaseComponentTab
 
     private void RestoreActiveState()
     {
-        var data = workshopPanel.GetComponentData(CraftingQueue.Instance.CurrentType);
+        var q = CraftingQueue.Instance;
+        if (q == null || !q.HasCurrentType) return;
+        if (!q.IsActive && !q.CanRedeem) return;
+
+        var data = workshopPanel.GetComponentData(q.CurrentType);
         if (data == null) return;
         _selected = data;
         base.OnComponentClick(data);
@@ -116,7 +119,7 @@ public class LabTab : BaseComponentTab
         if (q == null) return;
 
         bool active = q.IsActive;
-        bool ready = q.IsReadyToCollect;
+        bool ready = !active && q.CanRedeem;
 
         progressText.gameObject.SetActive(active);
         if (gridLockOverlay != null) gridLockOverlay.SetActive(active || ready);
@@ -145,7 +148,11 @@ public class LabTab : BaseComponentTab
 
     private void OnRedeemClick()
     {
-        CraftingQueue.Instance.Redeem();
+        var q = CraftingQueue.Instance;
+        if (q == null) return;
+
+        q.Redeem();
+        RefreshCraftUI();
     }
 
     private void OnCraftClick()

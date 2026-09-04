@@ -16,6 +16,12 @@ public static class GameSave
         public const string TimeOfDay = "timeOfDay";
         public const string DormitoryLevel = "dormitory.level";
         public const string DormitoryResidents = "dormitory.residents";
+        public const string CraftType = "craft.type";
+        public const string CraftStart = "craft.start";
+        public const string CraftDuration = "craft.duration";
+        public const string CraftActive = "craft.active";
+        public const string CraftReady = "craft.ready";
+        public const string CraftLastSeen = "craft.lastSeen";
 
         public static string Gainer(string id) => "gainer." + id;
     }

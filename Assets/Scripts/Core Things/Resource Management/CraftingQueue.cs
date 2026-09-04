@@ -13,12 +13,22 @@ public class CraftingQueue : MonoBehaviour
 {
     public static CraftingQueue Instance { get; private set; }
 
-    private const string KeyType = "craft_type";
-    private const string KeyStartTime = "craft_start";
-    private const string KeyDuration = "craft_duration";
-    private const string KeyActive = "craft_active";
-    private const string KeyReady = "craft_ready";
-    private const string KeyLastSeen = "craft_last_seen";
+    private const string KeyType = GameSave.Keys.CraftType;
+    private const string KeyStartTime = GameSave.Keys.CraftStart;
+    private const string KeyDuration = GameSave.Keys.CraftDuration;
+    private const string KeyActive = GameSave.Keys.CraftActive;
+    private const string KeyReady = GameSave.Keys.CraftReady;
+    private const string KeyLastSeen = GameSave.Keys.CraftLastSeen;
+
+    private static readonly string[] LegacyKeys =
+    {
+        "craft_type",
+        "craft_start",
+        "craft_duration",
+        "craft_active",
+        "craft_ready",
+        "craft_last_seen"
+    };
 
     private const string ConfigResourcePath = "Craft/Crafting Config";
 
@@ -41,6 +51,7 @@ public class CraftingQueue : MonoBehaviour
     public float Remaining => IsActive ? Mathf.Max(0f, Duration - Elapsed) : 0f;
     public bool IsCompleted => IsActive && Elapsed >= Duration;
     public bool IsReadyToCollect { get; private set; }
+    public bool CanRedeem => IsReadyToCollect && HasCurrentType && CurrentData != null;
 
     public ComponentData CurrentData { get; private set; }
 
@@ -58,8 +69,10 @@ public class CraftingQueue : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        PurgeLegacyKeys();
         LoadState();
         RestoreCurrentData();
+        DropStateIfBroken();
     }
 
     private void OnDestroy()
@@ -130,12 +143,8 @@ public class CraftingQueue : MonoBehaviour
     public void CancelCraft()
     {
         if (!IsActive) return;
-        IsActive = false;
-        HasCurrentType = false;
-        _elapsedSeconds = 0d;
-        ClearState();
+        ResetState();
         OnCraftCancelled?.Invoke();
-        CurrentData = null;
     }
 
     public void RestoreCurrentData()
@@ -153,14 +162,27 @@ public class CraftingQueue : MonoBehaviour
     {
         if (!IsReadyToCollect) return;
 
+        RestoreCurrentData();
+
+        if (!HasCurrentType || CurrentData == null)
+        {
+            ResetState();
+            OnCraftCancelled?.Invoke();
+            return;
+        }
+
+        if (InventoryManager.Instance == null) return;
+
         ComponentType redeemed = CurrentType;
         InventoryManager.Instance.AddComponent(redeemed, 1);
 
         IsReadyToCollect = false;
         HasCurrentType = false;
         CurrentData = null;
-        Save.Delete(KeyReady);
-        Save.Delete(KeyType);
+        Duration = 0f;
+        _elapsedSeconds = 0d;
+        GameSave.Delete(KeyReady);
+        GameSave.Delete(KeyType);
 
         OnCraftRedeemed?.Invoke(redeemed);
         EventBus<InventoryChangedEvent>.Raise(new InventoryChangedEvent());
@@ -174,13 +196,21 @@ public class CraftingQueue : MonoBehaviour
         _completedOffline = false;
         IsReadyToCollect = true;
         _elapsedSeconds = Duration;
-        Save.Set(KeyReady, true);
-        Save.Delete(KeyActive);
-        Save.Delete(KeyStartTime);
-        Save.Delete(KeyDuration);
-        Save.Delete(KeyLastSeen);
+        GameSave.Set(KeyReady, true);
+        GameSave.Delete(KeyActive);
+        GameSave.Delete(KeyStartTime);
+        GameSave.Delete(KeyDuration);
+        GameSave.Delete(KeyLastSeen);
+        RestoreCurrentData();
+
+        if (!HasCurrentType || CurrentData == null)
+        {
+            ResetState();
+            OnCraftCancelled?.Invoke();
+            return;
+        }
+
         OnCraftCompleted?.Invoke(CurrentType);
-        CurrentData = null;
     }
 
     private void AdvanceTime()
@@ -213,37 +243,60 @@ public class CraftingQueue : MonoBehaviour
 
     private void SaveState()
     {
-        Save.Set(KeyActive, true);
-        Save.Set(KeyType, (int)CurrentType);
-        Save.Set(KeyStartTime, _startTime.ToBinary().ToString());
-        Save.Set(KeyDuration, Duration);
-        Save.Set(KeyLastSeen, _lastSeenTime.ToBinary().ToString());
+        GameSave.Set(KeyActive, true);
+        GameSave.Set(KeyType, (int)CurrentType);
+        GameSave.Set(KeyStartTime, _startTime.Ticks);
+        GameSave.Set(KeyDuration, Duration);
+        GameSave.Set(KeyLastSeen, _lastSeenTime.Ticks);
     }
 
     private void PersistLastSeen()
     {
         if (!IsActive) return;
-        Save.Set(KeyLastSeen, _lastSeenTime.ToBinary().ToString());
+        GameSave.Set(KeyLastSeen, _lastSeenTime.Ticks);
+        GameSave.FlushNow();
     }
 
     private void LoadState()
     {
-        if (Save.Has(KeyType))
+        if (GameSave.Has(KeyType))
         {
-            CurrentType = (ComponentType)Save.Get(KeyType, 0);
-            HasCurrentType = true;
+            int stored = GameSave.Get(KeyType, -1);
+            if (Enum.IsDefined(typeof(ComponentType), stored))
+            {
+                CurrentType = (ComponentType)stored;
+                HasCurrentType = true;
+            }
         }
 
-        if (Save.Get(KeyReady, false))
+        if (GameSave.Get(KeyReady, false))
         {
+            if (!HasCurrentType) { ClearState(); return; }
+
             IsReadyToCollect = true;
+            GameSave.Delete(KeyActive);
+            GameSave.Delete(KeyStartTime);
+            GameSave.Delete(KeyDuration);
+            GameSave.Delete(KeyLastSeen);
             return;
         }
 
-        if (!Save.Get(KeyActive, false)) return;
-        if (!HasCurrentType) { ClearState(); return; }
+        if (!GameSave.Get(KeyActive, false) || !HasCurrentType)
+        {
+            HasCurrentType = false;
+            ClearState();
+            return;
+        }
 
-        Duration = Save.Get(KeyDuration, 0f);
+        float duration = GameSave.Get(KeyDuration, 0f);
+        if (float.IsNaN(duration) || float.IsInfinity(duration) || duration < MinDuration)
+        {
+            HasCurrentType = false;
+            ClearState();
+            return;
+        }
+
+        Duration = duration;
         _startTime = ReadTime(KeyStartTime, DateTime.UtcNow);
         _lastSeenTime = ReadTime(KeyLastSeen, _startTime);
         IsActive = true;
@@ -258,19 +311,46 @@ public class CraftingQueue : MonoBehaviour
         }
     }
 
+    private void DropStateIfBroken()
+    {
+        if (!IsReadyToCollect && !IsActive && !_completedOffline) return;
+        if (HasCurrentType && CurrentData != null) return;
+
+        ResetState();
+    }
+
     private static DateTime ReadTime(string key, DateTime fallback)
     {
-        string raw = Save.Get(key, string.Empty);
-        if (string.IsNullOrEmpty(raw)) return fallback;
-        return long.TryParse(raw, out long binary) ? DateTime.FromBinary(binary) : fallback;
+        long ticks = GameSave.Get(key, 0L);
+        if (ticks <= 0L || ticks > DateTime.MaxValue.Ticks) return fallback;
+        return new DateTime(ticks, DateTimeKind.Utc);
+    }
+
+    private void ResetState()
+    {
+        IsActive = false;
+        IsReadyToCollect = false;
+        HasCurrentType = false;
+        CurrentData = null;
+        Duration = 0f;
+        _elapsedSeconds = 0d;
+        _completedOffline = false;
+        ClearState();
     }
 
     private void ClearState()
     {
-        Save.Delete(KeyActive);
-        Save.Delete(KeyType);
-        Save.Delete(KeyStartTime);
-        Save.Delete(KeyDuration);
-        Save.Delete(KeyLastSeen);
+        GameSave.Delete(KeyActive);
+        GameSave.Delete(KeyType);
+        GameSave.Delete(KeyStartTime);
+        GameSave.Delete(KeyDuration);
+        GameSave.Delete(KeyLastSeen);
+        GameSave.Delete(KeyReady);
+    }
+
+    private static void PurgeLegacyKeys()
+    {
+        foreach (string key in LegacyKeys)
+            if (Save.Has(key)) Save.Delete(key);
     }
 }
